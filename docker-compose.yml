@@ -1,0 +1,41 @@
+# Local development convenience only. Not part of the deployable
+# application itself — see README.md §6 for conventional PHP hosting.
+name: verapay
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: verapay
+      MYSQL_USER: verapay_app
+      MYSQL_PASSWORD: secretpass
+      MYSQL_ROOT_PASSWORD: rootsecret
+    volumes:
+      - verapay-db-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootsecret"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8000"
+    environment:
+      DB_HOST: db
+
+volumes:
+  verapay-db-data:

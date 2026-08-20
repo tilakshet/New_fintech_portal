@@ -1,0 +1,13 @@
+{
+  "name": "verapay-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build tooling for the Verapay payment operations dashboard (Tailwind CSS compile step only — not required at runtime).",
+  "scripts": {
+    "build:css": "tailwindcss -i ./public/assets/css/app.css -o ./public/assets/css/app.build.css --minify",
+    "watch:css": "tailwindcss -i ./public/assets/css/app.css -o ./public/assets/css/app.build.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13"
+  }
+}

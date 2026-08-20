@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 25.6px;
+  }
+
+  body {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-muted);
+    color: var(--color-brand-emphasis);
+  }
+}
+
+@layer components {
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded font-semibold text-md leading-none px-6 py-3 transition-colors duration-instant ease-in-out select-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-emphasis active:bg-brand-emphasis;
+  }
+  .btn-secondary {
+    @apply btn bg-surface-raised text-text-primary border border-border-strong hover:bg-surface-muted active:bg-surface-muted;
+  }
+  .btn-tertiary {
+    @apply btn bg-transparent text-brand hover:bg-brand-muted active:bg-brand-muted;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:opacity-90 active:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-text-secondary hover:bg-surface-muted active:bg-surface-muted;
+  }
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-sm w-9 h-9 text-text-secondary hover:bg-surface-muted hover:text-text-primary transition-colors duration-instant disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-loading {
+    @apply relative text-transparent pointer-events-none;
+  }
+  .btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    color: inherit;
+    animation: btn-spin 700ms linear infinite;
+  }
+  .btn-primary.btn-loading::after,
+  .btn-danger.btn-loading::after { color: #fff; }
+  .btn-secondary.btn-loading::after,
+  .btn-tertiary.btn-loading::after,
+  .btn-ghost.btn-loading::after { color: var(--color-text-primary); }
+
+  @keyframes btn-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ---------- Cards ---------- */
+  .card {
+    @apply bg-surface-raised border border-border rounded-md p-6 shadow-soft;
+  }
+  .card-title {
+    @apply text-lg font-semibold text-text-primary;
+  }
+  .card-subtitle {
+    @apply text-sm text-text-secondary;
+  }
+  /* Reserve for cards that link/navigate somewhere real — the lift
+     signals "this leads to more detail," never used decoratively alone. */
+  .card-interactive {
+    @apply block transition-all duration-instant ease-in-out hover:shadow-card hover:-translate-y-0.5 hover:border-transparent;
+  }
+
+  /* ---------- Form fields ---------- */
+  .field-label {
+    @apply block text-sm font-semibold text-text-primary mb-1.5;
+  }
+  .field-help {
+    @apply mt-1.5 text-sm text-text-secondary;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-danger font-medium;
+  }
+  .field-input {
+    @apply block w-full rounded-sm border border-border-strong bg-surface-raised text-text-primary text-lg px-4 py-3 transition-colors duration-instant placeholder:text-text-secondary disabled:bg-surface-muted disabled:text-text-secondary;
+  }
+  .field-input:focus-visible {
+    @apply border-brand;
+  }
+  .field-input[aria-invalid="true"] {
+    @apply border-danger;
+  }
+
+  /* ---------- Badges / status ---------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold leading-none;
+  }
+  .badge-success { @apply badge bg-success-bg text-success; }
+  .badge-danger { @apply badge bg-danger-bg text-danger; }
+  .badge-warning { @apply badge bg-warning-bg text-warning; }
+  .badge-info { @apply badge bg-info-bg text-info; }
+  .badge-neutral { @apply badge bg-neutral-bg text-neutral; }
+  .badge-dot { @apply w-1.5 h-1.5 rounded-full bg-current; }
+
+  /* ---------- Nav ---------- */
+  .nav-link {
+    @apply flex items-center gap-3 rounded-sm px-4 py-3 text-md font-medium text-text-inverse/70 hover:bg-white/5 hover:text-text-inverse transition-colors duration-instant;
+  }
+  .nav-link[aria-current="page"] {
+    @apply bg-white/10 text-text-inverse;
+  }
+  .nav-link[aria-current="page"] .nav-link-indicator {
+    @apply opacity-100;
+  }
+  .nav-link-indicator {
+    @apply w-1 h-5 rounded-full bg-brand opacity-0 transition-opacity duration-instant;
+  }
+
+  /* ---------- Table ---------- */
+  .table-base {
+    @apply w-full text-left text-md;
+  }
+  .table-base thead th {
+    @apply text-xs font-semibold uppercase tracking-wide text-text-secondary border-b border-border px-4 py-3;
+  }
+  .table-base tbody td {
+    @apply px-4 py-3 border-b border-border text-text-primary;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-surface-muted;
+  }
+
+  /* ---------- Skeleton ---------- */
+  .skeleton {
+    @apply relative overflow-hidden bg-surface-muted rounded-sm;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after { animation: none; }
+  }
+  @keyframes skeleton-shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    @apply flex items-start gap-3 w-full max-w-sm rounded-md border p-4 shadow-card bg-surface-raised;
+  }
+  .toast-success { @apply border-success/30; }
+  .toast-error { @apply border-danger/30; }
+  .toast-warning { @apply border-warning/30; }
+  .toast-info { @apply border-info/30; }
+
+  /* ---------- Skip link ---------- */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-surface-raised focus:text-text-primary focus:px-4 focus:py-2 focus:rounded-sm focus:shadow-card;
+  }
+}

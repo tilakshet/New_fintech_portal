@@ -1,0 +1,12 @@
+# Defense in depth for hosts where the document root cannot be pointed at
+# /public: block direct access to everything except the public/ folder.
+# If your host lets you set the document root to /public directly, this
+# file is redundant but harmless.
+
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(config|includes|pages|database)/ - [F,L]
+
+<FilesMatch "\.(env|sql|md)$">
+    Require all denied
+</FilesMatch>

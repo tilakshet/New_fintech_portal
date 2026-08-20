@@ -1,0 +1,85 @@
+/*
+  Verapay design tokens.
+  Base palette values were supplied as the product's starting foundation.
+  Where a supplied value failed WCAG AA for its intended use (body text,
+  functional borders), an accessible alternative is defined instead and
+  noted inline — see comments below.
+
+  Each color is defined twice: as a hex value (for direct CSS/SVG use,
+  e.g. fill="var(--color-brand)") and as an "R G B" channel triple (so
+  Tailwind's bg-brand/40-style opacity modifiers can compose alpha via
+  rgb(var(--color-brand-rgb) / <alpha>)). Keep both in sync when changing
+  a color.
+*/
+
+:root {
+  /* ---- Typography ---- */
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Text ---- */
+  --color-text-primary: #344767;        /* darkest supplied tone -> highest-emphasis text, ~8.9:1 on white */
+  --color-text-primary-rgb: 52 71 103;
+  --color-text-secondary: #67748e;      /* supplied "primary" tone reassigned to secondary/supporting text, ~4.6:1 on white */
+  --color-text-secondary-rgb: 103 116 142;
+  --color-text-tertiary: #4e148c;       /* accent tone for links / emphasis, ~8.4:1 on white */
+  --color-text-tertiary-rgb: 78 20 140;
+  --color-text-inverse: #f8fafc;        /* accessible alt: supplied inverse (#64748b) is a mid-gray and unreadable on dark surfaces */
+  --color-text-inverse-rgb: 248 250 252;
+
+  /* ---- Surfaces ---- */
+  --color-surface-base: #ffffff;
+  --color-surface-base-rgb: 255 255 255;
+  --color-surface-muted: #f8f9fa;
+  --color-surface-muted-rgb: 248 249 250;
+  --color-surface-raised: #ffffff;
+  --color-surface-raised-rgb: 255 255 255;
+  --color-surface-strong: #16181d;      /* refined from supplied pure #000000 for a less harsh dark surface (sidebar, inverse panels) */
+  --color-surface-strong-rgb: 22 24 29;
+
+  /* ---- Borders ---- */
+  --color-border-default: #e1e1e1;      /* decorative dividers only */
+  --color-border-default-rgb: 225 225 225;
+  --color-border-strong: #b9bfc7;       /* accessible alt: supplied #e1e1e1 is ~1.2:1, fails the 3:1 non-text contrast minimum for functional borders (inputs, focus rings) */
+  --color-border-strong-rgb: 185 191 199;
+
+  /* ---- Brand ---- */
+  --color-brand: #4e148c;
+  --color-brand-rgb: 78 20 140;
+  --color-brand-emphasis: #3a0f68;
+  --color-brand-emphasis-rgb: 58 15 104;
+  --color-brand-muted: #f2e9fa;
+  --color-brand-muted-rgb: 242 233 250;
+
+  /* ---- Status ---- */
+  --color-success: #15803d;
+  --color-success-rgb: 21 128 61;
+  --color-success-bg: #ecfdf3;
+  --color-danger: #b91c1c;
+  --color-danger-rgb: 185 28 28;
+  --color-danger-bg: #fef2f2;
+  --color-warning: #b45309;
+  --color-warning-rgb: 180 83 9;
+  --color-warning-bg: #fffbeb;
+  --color-info: #1d4ed8;
+  --color-info-rgb: 29 78 216;
+  --color-info-bg: #eff6ff;
+  --color-neutral: #475569;
+  --color-neutral-rgb: 71 85 105;
+  --color-neutral-bg: #f1f5f9;
+
+  /* ---- Shadows ---- */
+  --shadow-card: rgba(149, 157, 165, 0.2) 0px 8px 24px 0px;
+  --shadow-soft: rgba(78, 20, 140, 0.05) 0px 4px 12px 0px;
+
+  /* ---- Motion ---- */
+  --duration-instant: 200ms;
+  --duration-fast: 300ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+  }
+}

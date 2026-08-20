@@ -19,6 +19,12 @@ define('SESSION_LIFETIME_MINUTES', (int) env('SESSION_LIFETIME_MINUTES', 30));
 define('LOGIN_MAX_ATTEMPTS', (int) env('LOGIN_MAX_ATTEMPTS', 5));
 define('LOGIN_LOCKOUT_MINUTES', (int) env('LOGIN_LOCKOUT_MINUTES', 15));
 
+// KYC document uploads are stored outside /public (never directly web
+// accessible) and served only via the authenticated download endpoint.
+define('KYC_UPLOAD_DIR', APP_ROOT . '/storage/kyc-uploads');
+define('KYC_UPLOAD_MAX_BYTES', 5 * 1024 * 1024); // 5MB per file
+define('KYC_UPLOAD_ALLOWED_MIME', ['application/pdf', 'image/jpeg', 'image/png']);
+
 error_reporting(E_ALL);
 ini_set('display_errors', APP_DEBUG ? '1' : '0');
 ini_set('log_errors', '1');

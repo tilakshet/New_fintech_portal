@@ -37,13 +37,7 @@ function icon(string $name, string $class = 'w-5 h-5'): string
         'shield' => '<path d="M12 3.5 19.5 6.5V11c0 5-3.2 8.2-7.5 9.5C7.7 19.2 4.5 16 4.5 11V6.5L12 3.5Z"/>',
         'gateway' => '<rect x="3" y="9" width="7" height="7" rx="1.5"/><rect x="14" y="9" width="7" height="7" rx="1.5"/><path d="M10 12.5h4"/><path d="M6.5 9V6a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 17.5 6v3"/>',
         'key' => '<circle cx="8" cy="15.5" r="4"/><path d="M11.2 12.3 19 4.5M19 4.5h-3.2M19 4.5v3.2M15.5 8 17.5 10"/>',
-        'documentation' => '<path d="M5.5 4.5h9L18.5 8v11a1 1 0 0 1-1 1h-12a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"/><path d="M14.5 4.5V8h4"/><path d="M8 12.5h8M8 15.5h8M8 9.5h3"/>',
-        'code' => '<path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
-        'copy' => '<rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5.5A1.5 1.5 0 0 0 13.5 4H5.5A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9"/>',
-        'check' => '<path d="M5 12.5 10 17 19 7"/>',
-        'sun' => '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.5 12H5M19 12h2.5M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
-        'sunset' => '<path d="M4 17.5h16"/><circle cx="12" cy="13" r="4"/><path d="M12 6.5V4M6.5 8.5 5 7M17.5 8.5 19 7"/><path d="M3 20.5h18"/>',
-        'moon' => '<path d="M19.5 14.3A8 8 0 1 1 9.7 4.5a6.3 6.3 0 0 0 9.8 9.8Z"/>',
+        'upload' => '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>',
     ];
 
     $path = $paths[$name] ?? $paths['alert-circle'];

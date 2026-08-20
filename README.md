@@ -169,6 +169,7 @@ See `database/schema.sql` for full DDL. Summary:
 
 - **users** — role (`customer`/`operator`/`admin`), status (`active`/`suspended`)
 - **wallets** — one per user; `available_balance` / `pending_balance`, both `DECIMAL(18,2)`
+- **business_profiles** — customer KYC/settlement details; identity document and bank account numbers are hashed + last-4 only, never stored or returned in full
 - **transactions** — unified deposit/withdrawal ledger (`type` column); Deposits and Withdrawals pages are filtered views of this table
 - **support_conversations** / **support_messages** — persisted chat, shared between customer and operator views
 - **notifications** — per-user, `is_read` flag

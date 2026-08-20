@@ -41,6 +41,9 @@ function icon(string $name, string $class = 'w-5 h-5'): string
         'code' => '<path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
         'copy' => '<rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5.5A1.5 1.5 0 0 0 13.5 4H5.5A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9"/>',
         'check' => '<path d="M5 12.5 10 17 19 7"/>',
+        'sun' => '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.5 12H5M19 12h2.5M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
+        'sunset' => '<path d="M4 17.5h16"/><circle cx="12" cy="13" r="4"/><path d="M12 6.5V4M6.5 8.5 5 7M17.5 8.5 19 7"/><path d="M3 20.5h18"/>',
+        'moon' => '<path d="M19.5 14.3A8 8 0 1 1 9.7 4.5a6.3 6.3 0 0 0 9.8 9.8Z"/>',
     ];
 
     $path = $paths[$name] ?? $paths['alert-circle'];

@@ -35,23 +35,58 @@ docker-compose.yml, docker/        Local dev convenience (MySQL + PHP containers
 - Node.js (build time only, to compile Tailwind CSS — not required to run the app)
 - Apache with `mod_rewrite` (or Nginx — see §6), or PHP's built-in server for local dev
 
-## 3. Quick start with Docker (recommended — this is what gets tested)
+## 3. Getting started (step by step, for a new developer)
 
-The only prerequisite is Docker Desktop. No PHP or MySQL install needed on your machine at all.
+This is the exact path to get the app running on your own machine, from nothing installed to a working login screen. No PHP or MySQL install needed — Docker runs both for you.
 
+**Step 1 — Install Docker Desktop.**
+Download it from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) and install it. Open it once and make sure it says it's running (there's a whale icon in your system tray/menu bar). Everything below is typed into a terminal — Command Prompt, PowerShell, or Git Bash on Windows; Terminal on Mac.
+
+**Step 2 — Get the project code.**
+Whoever gave you access to the repo will give you a URL. Then:
 ```bash
-git clone <your-repo-url> verapay && cd verapay
-cp .env.example .env                          # defaults already match docker-compose.yml
-docker compose up -d --build                  # starts MySQL + PHP; schema.sql auto-imports on first run
-docker compose exec app php database/seed.php # creates demo accounts (see §7)
+git clone <the-repo-url> verapay
+cd verapay
 ```
+If you were just handed a folder/zip instead of a git URL, skip `git clone` and just `cd` into that folder.
 
-Open **http://localhost:8080/login**. If port 8080 is already taken on your machine, change the `8080:8000` line in `docker-compose.yml` and update `APP_URL` in `.env` to match.
-
+**Step 3 — Create your local config file.**
+The project ships a *template* config (`.env.example`) but never a real `.env` — you make your own copy:
 ```bash
-docker compose down       # stop (DB data persists in a named volume)
-docker compose logs -f app  # watch request logs
+cp .env.example .env
 ```
+(On Windows Command Prompt, use `copy .env.example .env` instead.) You don't need to edit anything inside it — the defaults already match the Docker setup in the next step.
+
+**Step 4 — Start the app and database.**
+```bash
+docker compose up -d --build
+```
+First run takes a minute or two — it's downloading the PHP and MySQL images and building the app container. You'll know it worked when the last few lines say things like `Container verapay-app-1 Started`.
+
+**Step 5 — Load the database.**
+The database tables are created automatically the first time MySQL starts up. You still need to add the demo data (test accounts, sample transactions) once:
+```bash
+docker compose exec app php database/seed.php
+```
+You should see a `Seed complete.` message with a list of demo accounts.
+
+**Step 6 — Open it in your browser.**
+Go to **http://localhost:8080/login**. You should see the Verapay sign-in page.
+
+**Step 7 — Log in.**
+Use any account from the table in §8 — e.g. email `priya@verapay.test`, password `Demo!2024pass`.
+
+That's it — you're in. To stop everything later:
+```bash
+docker compose down       # stops the containers; your database data is kept
+```
+To start it again another day, you only need `docker compose up -d` (no `--build`, no reseeding).
+
+**If something goes wrong:**
+- *"port is already allocated"* when running `docker compose up` → something else on your PC is already using port 8080. Open `docker-compose.yml`, change the `"8080:8000"` line to e.g. `"8081:8000"`, then also change `APP_URL` in your `.env` to match, and try again.
+- *Blank page or "can't connect"* → check Docker Desktop is actually running, and run `docker compose ps` — both `app` and `db` should say `Up`/`healthy`.
+- *Login says incorrect password* → you likely skipped Step 5; run the seed command again.
+- Need to see server errors? `docker compose logs -f app`
 
 ## 4. Install without Docker
 

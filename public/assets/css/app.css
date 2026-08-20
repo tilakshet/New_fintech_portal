@@ -229,4 +229,37 @@
   .code-block:focus-within .code-copy-btn {
     @apply opacity-100;
   }
+
+  /* ---------- Trend chart (dashboard) ---------- */
+  .trend-chart {
+    @apply relative;
+  }
+  .trend-hit {
+    cursor: pointer;
+  }
+  .trend-bar {
+    @apply transition-opacity duration-instant;
+    opacity: 0.85;
+  }
+  .trend-bar.is-active {
+    opacity: 1;
+  }
+  .trend-bar-empty {
+    @apply transition-opacity duration-instant;
+  }
+  .trend-bar-empty.is-active {
+    opacity: 0.8;
+  }
+  .trend-tooltip {
+    @apply absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+10px)] bg-surface-strong text-white rounded-sm shadow-card px-3 py-2 pointer-events-none opacity-0 transition-opacity duration-instant whitespace-nowrap;
+  }
+  .trend-tooltip.is-visible {
+    @apply opacity-100;
+  }
+  .trend-tooltip .text-text-primary {
+    color: #fff;
+  }
+  .trend-tooltip .text-text-secondary {
+    color: rgb(255 255 255 / 70%);
+  }
 }

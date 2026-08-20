@@ -3,117 +3,105 @@
     window.Verapay = window.Verapay || {};
 
     /**
-     * Renders a simple grouped bar chart (success vs failed volume per day)
-     * as inline SVG into the given container. Each point also gets a
-     * <title> tooltip and the container gets a visually-hidden text
-     * summary so the trend is available to screen readers, not just color.
-     *
-     * points: [{ label, success, failed }]
-     */
-    function renderVolumeChart(containerEl, points) {
-        if (!containerEl || !points?.length) return;
-
-        const width = 560;
-        const height = 200;
-        const padding = { top: 10, right: 10, bottom: 28, left: 10 };
-        const chartW = width - padding.left - padding.right;
-        const chartH = height - padding.top - padding.bottom;
-        const maxVal = Math.max(1, ...points.map((p) => p.success + p.failed));
-        const groupW = chartW / points.length;
-        const barW = Math.min(22, groupW * 0.32);
-
-        let bars = '';
-        let labels = '';
-        points.forEach((p, i) => {
-            const cx = padding.left + groupW * i + groupW / 2;
-            const successH = (p.success / maxVal) * chartH;
-            const failedH = (p.failed / maxVal) * chartH;
-            const successX = cx - barW - 3;
-            const failedX = cx + 3;
-
-            bars += `
-                <rect x="${successX}" y="${padding.top + chartH - successH}" width="${barW}" height="${Math.max(successH, 1)}" rx="3" fill="var(--color-success)" opacity="0.85">
-                    <title>${p.label}: ${p.success} successful</title>
-                </rect>
-                <rect x="${failedX}" y="${padding.top + chartH - failedH}" width="${barW}" height="${Math.max(failedH, 1)}" rx="3" fill="var(--color-danger)" opacity="0.85">
-                    <title>${p.label}: ${p.failed} failed</title>
-                </rect>`;
-            labels += `<text x="${cx}" y="${height - 8}" text-anchor="middle" font-size="10" fill="var(--color-text-secondary)">${p.label}</text>`;
-        });
-
-        containerEl.innerHTML = `
-            <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto" role="img" aria-labelledby="volume-chart-title">
-                <title id="volume-chart-title">Successful vs failed payment volume by day</title>
-                <line x1="${padding.left}" y1="${padding.top + chartH}" x2="${width - padding.right}" y2="${padding.top + chartH}" stroke="var(--color-border-default)" stroke-width="1"/>
-                ${bars}
-                ${labels}
-            </svg>
-            <p class="sr-only">
-                ${points.map((p) => `${p.label}: ${p.success} successful, ${p.failed} failed.`).join(' ')}
-            </p>`;
-    }
-
-    /**
      * Single-series daily bar chart (e.g. deposit amount or withdrawal
      * amount per day). points: [{ label, value }]
+     *
+     * Renders into containerEl a wrapper holding the SVG plus a floating
+     * tooltip. Days with a value of 0 get a short muted "no activity"
+     * stub instead of a near-invisible 1px sliver — with sparse demo
+     * data (a week where only one day has any transactions) a plain
+     * proportional bar chart reads as a flat line, which is the actual
+     * bug this replaces, not just a style pass.
      */
     function renderTrendChart(containerEl, points, color, unitLabel, titleId) {
         if (!containerEl || !points?.length) return;
 
-        const width = 400;
-        const height = 180;
-        const padding = { top: 10, right: 8, bottom: 26, left: 8 };
+        const width = 500;
+        const height = 230;
+        const padding = { top: 28, right: 12, bottom: 30, left: 12 };
         const chartW = width - padding.left - padding.right;
         const chartH = height - padding.top - padding.bottom;
         const maxVal = Math.max(1, ...points.map((p) => p.value));
         const groupW = chartW / points.length;
-        const barW = Math.min(26, groupW * 0.5);
+        const barW = Math.min(34, groupW * 0.46);
+        const EMPTY_STUB_H = 6;
+
+        let gridlines = '';
+        [0, 0.25, 0.5, 0.75, 1].forEach((frac) => {
+            const y = padding.top + chartH * frac;
+            gridlines += `<line x1="${padding.left}" y1="${y.toFixed(1)}" x2="${width - padding.right}" y2="${y.toFixed(1)}" stroke="var(--color-border-default)" stroke-width="1" stroke-dasharray="${frac === 1 ? 'none' : '2 3'}"/>`;
+        });
 
         let bars = '';
+        let hitAreas = '';
         let labels = '';
+        const meta = [];
+
         points.forEach((p, i) => {
             const cx = padding.left + groupW * i + groupW / 2;
-            const barH = (p.value / maxVal) * chartH;
-            bars += `
-                <rect x="${(cx - barW / 2).toFixed(1)}" y="${(padding.top + chartH - barH).toFixed(1)}" width="${barW}" height="${Math.max(barH, 1)}" rx="3" fill="${color}" opacity="0.9">
-                    <title>${p.label}: ${unitLabel(p.value)}</title>
-                </rect>`;
-            labels += `<text x="${cx}" y="${height - 8}" text-anchor="middle" font-size="10" fill="var(--color-text-secondary)">${p.label}</text>`;
+            const hasValue = p.value > 0;
+            const barH = hasValue ? (p.value / maxVal) * chartH : EMPTY_STUB_H;
+            const barY = padding.top + chartH - barH;
+            const barX = (cx - barW / 2).toFixed(1);
+
+            bars += hasValue
+                ? `<rect class="trend-bar" data-i="${i}" x="${barX}" y="${barY.toFixed(1)}" width="${barW}" height="${barH.toFixed(1)}" rx="4" fill="${color}">
+                       <title>${p.label}: ${unitLabel(p.value)}</title>
+                   </rect>`
+                : `<rect class="trend-bar-empty" data-i="${i}" x="${barX}" y="${barY.toFixed(1)}" width="${barW}" height="${barH}" rx="3" fill="var(--color-border-strong)" opacity="0.5">
+                       <title>${p.label}: no activity</title>
+                   </rect>`;
+
+            hitAreas += `<rect class="trend-hit" data-i="${i}" x="${(padding.left + groupW * i).toFixed(1)}" y="${padding.top}" width="${groupW.toFixed(1)}" height="${chartH}" fill="transparent"/>`;
+            labels += `<text x="${cx.toFixed(1)}" y="${height - 10}" text-anchor="middle" font-size="11" fill="var(--color-text-secondary)">${p.label}</text>`;
+
+            meta.push({
+                xPct: (cx / width) * 100,
+                topPct: (barY / height) * 100,
+                label: p.label,
+                text: hasValue ? unitLabel(p.value) : 'No activity',
+            });
         });
 
         containerEl.innerHTML = `
-            <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto" role="img" aria-labelledby="${titleId}">
-                <title id="${titleId}">Daily volume, last ${points.length} days</title>
-                <line x1="${padding.left}" y1="${padding.top + chartH}" x2="${width - padding.right}" y2="${padding.top + chartH}" stroke="var(--color-border-default)" stroke-width="1"/>
-                ${bars}
-                ${labels}
-            </svg>
-            <p class="sr-only">${points.map((p) => `${p.label}: ${unitLabel(p.value)}.`).join(' ')}</p>`;
+            <div class="trend-chart">
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto" role="img" aria-labelledby="${titleId}">
+                    <title id="${titleId}">Daily volume, last ${points.length} days</title>
+                    ${gridlines}
+                    ${bars}
+                    ${labels}
+                    ${hitAreas}
+                </svg>
+                <div class="trend-tooltip" role="status" aria-hidden="true"></div>
+            </div>
+            <p class="sr-only">${points.map((p) => `${p.label}: ${p.value > 0 ? unitLabel(p.value) : 'no activity'}.`).join(' ')}</p>`;
+
+        const wrapper = containerEl.querySelector('.trend-chart');
+        const tooltip = containerEl.querySelector('.trend-tooltip');
+        const barEls = containerEl.querySelectorAll('.trend-bar, .trend-bar-empty');
+
+        function showTooltip(i) {
+            const m = meta[i];
+            if (!m) return;
+            tooltip.innerHTML = `<span class="block text-xs font-semibold text-text-primary">${m.label}</span><span class="block text-sm font-semibold ${m.text === 'No activity' ? 'text-text-secondary' : 'text-text-primary'}">${m.text}</span>`;
+            tooltip.style.left = m.xPct + '%';
+            tooltip.style.top = Math.max(m.topPct, 4) + '%';
+            tooltip.classList.add('is-visible');
+            barEls.forEach((el) => el.classList.toggle('is-active', el.dataset.i === String(i)));
+        }
+        function hideTooltip() {
+            tooltip.classList.remove('is-visible');
+            barEls.forEach((el) => el.classList.remove('is-active'));
+        }
+
+        containerEl.querySelectorAll('.trend-hit').forEach((hit) => {
+            const i = hit.dataset.i;
+            hit.addEventListener('mouseenter', () => showTooltip(i));
+            hit.addEventListener('mouseleave', hideTooltip);
+            hit.addEventListener('touchstart', () => showTooltip(i), { passive: true });
+        });
+        wrapper.addEventListener('mouseleave', hideTooltip);
     }
 
-    /** Compact single-line trend sparkline. values: number[] */
-    function renderSparkline(containerEl, values, color = 'var(--color-brand)') {
-        if (!containerEl || !values?.length) return;
-        const width = 160;
-        const height = 40;
-        const max = Math.max(...values);
-        const min = Math.min(...values);
-        const range = max - min || 1;
-        const step = width / (values.length - 1 || 1);
-
-        const points = values.map((v, i) => {
-            const x = i * step;
-            const y = height - ((v - min) / range) * (height - 4) - 2;
-            return `${x.toFixed(1)},${y.toFixed(1)}`;
-        }).join(' ');
-
-        containerEl.innerHTML = `
-            <svg viewBox="0 0 ${width} ${height}" class="w-full h-10" preserveAspectRatio="none" role="img" aria-label="Trend sparkline">
-                <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`;
-    }
-
-    window.Verapay.renderVolumeChart = renderVolumeChart;
     window.Verapay.renderTrendChart = renderTrendChart;
-    window.Verapay.renderSparkline = renderSparkline;
 })();

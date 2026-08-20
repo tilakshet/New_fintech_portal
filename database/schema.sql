@@ -36,6 +36,28 @@ CREATE TABLE wallets (
     CONSTRAINT fk_wallets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE business_profiles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    legal_company_name VARCHAR(160) NULL,
+    company_type VARCHAR(60) NULL,
+    mobile_number VARCHAR(20) NULL,
+    whatsapp_number VARCHAR(20) NULL,
+    pan_number VARCHAR(10) NULL,
+    gstin VARCHAR(15) NULL,
+    office_address VARCHAR(255) NULL,
+    identity_last4 CHAR(4) NULL,
+    identity_hash VARCHAR(255) NULL,
+    bank_account_holder VARCHAR(120) NULL,
+    bank_account_last4 CHAR(4) NULL,
+    bank_account_hash VARCHAR(255) NULL,
+    bank_ifsc VARCHAR(11) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_business_profiles_user (user_id),
+    CONSTRAINT fk_business_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE transactions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,

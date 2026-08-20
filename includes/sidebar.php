@@ -18,7 +18,10 @@ $adminNav = [
     ['dashboard', 'dashboard', 'Dashboard'],
     ['transactions', 'transactions', 'Transactions'],
     ['admin/users', 'users', 'Customers'],
-    ['admin/gateways', 'gateway', 'Payment gateways'],
+    ['admin/gateways', 'gateway', 'Payment gateways', [
+        ['admin/gateways', 'gateway', 'Manage gateways'],
+        ['admin/gateways/docs', 'documentation', 'Documentation'],
+    ]],
     ['admin/support', 'support', 'Support inbox'],
     ['admin/audit-log', 'shield', 'Audit log'],
     ['notifications', 'notification', 'Notifications'],
@@ -29,6 +32,52 @@ $footerNav = [
     ['profile', 'profile', 'Profile'],
     ['settings', 'settings', 'Settings'],
 ];
+
+/**
+ * Renders one nav entry. Entries with a 4th (children) element render as
+ * an expandable group — a labeled toggle button plus an indented sub-list —
+ * rather than a direct link. Expanded by default whenever the current
+ * route matches the group or one of its children.
+ */
+function render_nav_entry(array $entry, string $route, int $index = 0): void
+{
+    [$routeKey, $iconName, $label] = $entry;
+    $children = $entry[3] ?? null;
+
+    if (!$children) {
+        ?>
+        <a href="/<?= e($routeKey) ?>" class="nav-link" <?= $route === $routeKey ? 'aria-current="page"' : '' ?>>
+            <span class="nav-link-indicator" aria-hidden="true"></span>
+            <?= icon($iconName, 'w-5 h-5 shrink-0') ?>
+            <span><?= e($label) ?></span>
+        </a>
+        <?php
+        return;
+    }
+
+    $childRoutes = array_column($children, 0);
+    $isActiveGroup = in_array($route, $childRoutes, true);
+    $panelId = 'nav-group-' . $index;
+    ?>
+    <div>
+        <button type="button" class="nav-link w-full text-left nav-group-toggle" aria-expanded="<?= $isActiveGroup ? 'true' : 'false' ?>" aria-controls="<?= e($panelId) ?>">
+            <span class="nav-link-indicator" aria-hidden="true"></span>
+            <?= icon($iconName, 'w-5 h-5 shrink-0') ?>
+            <span class="flex-1"><?= e($label) ?></span>
+            <?= icon('chevron-down', 'w-4 h-4 shrink-0 transition-transform duration-instant nav-group-chevron') ?>
+        </button>
+        <div id="<?= e($panelId) ?>" class="nav-group-panel pl-4 space-y-0.5 <?= $isActiveGroup ? '' : 'hidden' ?>">
+            <?php foreach ($children as [$childRoute, $childIcon, $childLabel]): ?>
+                <a href="/<?= e($childRoute) ?>" class="nav-link !py-2 text-sm" <?= $route === $childRoute ? 'aria-current="page"' : '' ?>>
+                    <span class="nav-link-indicator" aria-hidden="true"></span>
+                    <?= icon($childIcon, 'w-4 h-4 shrink-0') ?>
+                    <span><?= e($childLabel) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
 ?>
 <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-fast ease-in-out bg-surface-strong flex flex-col" aria-label="Primary">
     <div class="flex items-center gap-2.5 px-6 py-6">
@@ -37,12 +86,8 @@ $footerNav = [
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 space-y-0.5" aria-label="Main navigation">
-        <?php foreach ($navItems as [$routeKey, $iconName, $label]): ?>
-            <a href="/<?= e($routeKey) ?>" class="nav-link" <?= $route === $routeKey ? 'aria-current="page"' : '' ?>>
-                <span class="nav-link-indicator" aria-hidden="true"></span>
-                <?= icon($iconName, 'w-5 h-5 shrink-0') ?>
-                <span><?= e($label) ?></span>
-            </a>
+        <?php foreach ($navItems as $i => $entry): ?>
+            <?php render_nav_entry($entry, $route, $i); ?>
         <?php endforeach; ?>
     </nav>
 

@@ -37,6 +37,8 @@ function icon(string $name, string $class = 'w-5 h-5'): string
         'shield' => '<path d="M12 3.5 19.5 6.5V11c0 5-3.2 8.2-7.5 9.5C7.7 19.2 4.5 16 4.5 11V6.5L12 3.5Z"/>',
         'gateway' => '<rect x="3" y="9" width="7" height="7" rx="1.5"/><rect x="14" y="9" width="7" height="7" rx="1.5"/><path d="M10 12.5h4"/><path d="M6.5 9V6a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 17.5 6v3"/>',
         'key' => '<circle cx="8" cy="15.5" r="4"/><path d="M11.2 12.3 19 4.5M19 4.5h-3.2M19 4.5v3.2M15.5 8 17.5 10"/>',
+        'documentation' => '<path d="M5.5 4.5h9L18.5 8v11a1 1 0 0 1-1 1h-12a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"/><path d="M14.5 4.5V8h4"/><path d="M8 12.5h8M8 15.5h8M8 9.5h3"/>',
+        'code' => '<path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
     ];
 
     $path = $paths[$name] ?? $paths['alert-circle'];

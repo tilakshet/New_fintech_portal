@@ -75,6 +75,21 @@
     }
     window.Verapay.escapeHtml = escapeHtml;
 
+    // ---------------- Expandable nav groups (e.g. Payment gateways) ----------------
+    document.querySelectorAll('.nav-group-toggle').forEach((toggle) => {
+        const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!panel) return;
+        toggle.addEventListener('click', () => {
+            const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!expanded));
+            panel.classList.toggle('hidden', expanded);
+            toggle.querySelector('.nav-group-chevron')?.classList.toggle('rotate-180', !expanded);
+        });
+        if (toggle.getAttribute('aria-expanded') === 'true') {
+            toggle.querySelector('.nav-group-chevron')?.classList.add('rotate-180');
+        }
+    });
+
     // ---------------- Mobile sidebar ----------------
     const sidebar = document.getElementById('app-sidebar');
     const sidebarToggle = document.getElementById('sidebar-toggle');

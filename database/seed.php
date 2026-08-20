@@ -15,7 +15,7 @@ $pdo = db();
 // TRUNCATE is DDL and implicitly commits any open transaction in MySQL,
 // so this cleanup runs outside the transaction used for the inserts below.
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'transactions', 'wallets', 'login_attempts', 'payment_gateways', 'users'] as $table) {
+foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'transactions', 'wallets', 'business_profiles', 'login_attempts', 'payment_gateways', 'users'] as $table) {
     $pdo->exec("TRUNCATE TABLE {$table}");
 }
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
@@ -98,6 +98,20 @@ try {
     foreach ($demoGateways as [$name, $provider, $last4, $status, $isDefault, $daysOffset]) {
         $insertGateway->execute([$name, $provider, $last4, password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT), $status, $isDefault, (clone $now)->modify($daysOffset)->format('Y-m-d H:i:s')]);
     }
+
+    // Obviously-fictional placeholder KYC data (repeated/sequential digits,
+    // not a real assigned PAN/GSTIN/Aadhaar/account number for anyone).
+    $pdo->prepare(
+        'INSERT INTO business_profiles
+            (user_id, legal_company_name, company_type, mobile_number, whatsapp_number, pan_number, gstin,
+             office_address, identity_last4, identity_hash, bank_account_holder, bank_account_last4, bank_account_hash, bank_ifsc)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    )->execute([
+        $priya, 'Verapay Traders Pvt Ltd', 'Private Limited', '90000 00000', '90000 00000', 'AAAAA0000A', '29AAAAA0000A1Z5',
+        '123 Example Street, Sample Layout, Bengaluru, Karnataka - 560001',
+        '0000', password_hash('000000000000', PASSWORD_DEFAULT),
+        'Priya Natarajan', '4821', password_hash('000000004821', PASSWORD_DEFAULT), 'HDFC0001234',
+    ]);
 
     $insertNotification = $pdo->prepare(
         'INSERT INTO notifications (user_id, type, title, message, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)'

@@ -17,7 +17,8 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
-      sans: ["Montserrat", "ui-sans-serif", "system-ui", "sans-serif"]
+      sans: ["Montserrat", "ui-sans-serif", "system-ui", "sans-serif"],
+      mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"]
     },
     fontSize: {
       xs: ["0.75rem", "1.1"],

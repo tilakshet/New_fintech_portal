@@ -1,5 +1,6 @@
 <?php
-/** Admin only. Static reference page — no JS/API calls needed. */
+/** Admin only. Static reference page — collapsible endpoints, copyable code blocks. */
+$extraScripts = ['/assets/js/pages/gateway-docs.js'];
 
 function method_badge(string $method): string
 {
@@ -9,11 +10,18 @@ function method_badge(string $method): string
 
 function code_block(string $json): string
 {
-    return '<pre class="bg-surface-strong text-text-inverse rounded-sm p-4 overflow-x-auto text-sm font-mono leading-relaxed"><code>' . e($json) . '</code></pre>';
+    return '<div class="code-block group">'
+        . '<pre><code>' . e($json) . '</code></pre>'
+        . '<button type="button" class="code-copy-btn" data-copy-text="' . e($json) . '" aria-label="Copy code to clipboard">'
+        . icon('copy', 'w-4 h-4 copy-icon-default')
+        . icon('check', 'w-4 h-4 copy-icon-copied hidden text-success')
+        . '</button>'
+        . '</div>';
 }
 
 $endpoints = [
     [
+        'slug' => 'list',
         'method' => 'GET',
         'path' => '/api/admin/gateways/list.php',
         'summary' => 'List every configured gateway, most-recently-default first.',
@@ -41,6 +49,7 @@ JSON,
         'notes' => 'The full API key is never returned — only api_key_last4. There is no endpoint that returns a stored key in full.',
     ],
     [
+        'slug' => 'create',
         'method' => 'POST',
         'path' => '/api/admin/gateways/create.php',
         'summary' => 'Add a new gateway configuration. Starts inactive — activate it explicitly once you\'re ready to route traffic through it.',
@@ -61,6 +70,7 @@ JSON,
         'notes' => "provider must be one of: razorpay, payu, cashfree, stripe, paypal, other. api_key must be at least 8 characters; only its hash and last 4 characters are stored.",
     ],
     [
+        'slug' => 'update-status',
         'method' => 'POST',
         'path' => '/api/admin/gateways/update-status.php',
         'summary' => 'Activate or deactivate a gateway.',
@@ -73,6 +83,7 @@ JSON,
         'notes' => 'status must be "active" or "inactive". Deactivating the current default is rejected — set another gateway as default first.',
     ],
     [
+        'slug' => 'set-default',
         'method' => 'POST',
         'path' => '/api/admin/gateways/set-default.php',
         'summary' => 'Mark a gateway as the default processor. Unsets is_default on every other gateway in the same request.',
@@ -85,6 +96,7 @@ JSON,
         'notes' => 'The target gateway must already be active — activate it first via update-status.php.',
     ],
     [
+        'slug' => 'rotate-key',
         'method' => 'POST',
         'path' => '/api/admin/gateways/rotate-key.php',
         'summary' => "Replace a gateway's stored API key. The previous key is invalidated immediately.",
@@ -101,6 +113,7 @@ JSON,
         'notes' => 'Same 8-character minimum as create.php. There is no "view current key" endpoint by design.',
     ],
     [
+        'slug' => 'delete',
         'method' => 'POST',
         'path' => '/api/admin/gateways/delete.php',
         'summary' => 'Permanently remove a gateway configuration.',
@@ -119,6 +132,15 @@ JSON,
     <a href="/admin/gateways" class="btn-secondary shrink-0"><?= icon('gateway', 'w-4 h-4') ?>Manage gateways</a>
 </div>
 
+<nav class="flex flex-wrap items-center gap-2 mb-6" aria-label="Jump to endpoint">
+    <?php foreach ($endpoints as $ep): ?>
+        <a href="#ep-<?= e($ep['slug']) ?>" class="doc-jump-link">
+            <span class="font-mono text-xs font-bold <?= $ep['method'] === 'GET' ? 'text-info' : 'text-success' ?>"><?= e($ep['method']) ?></span>
+            <?= e($ep['slug']) ?>
+        </a>
+    <?php endforeach; ?>
+</nav>
+
 <div class="card mb-5">
     <h2 class="card-title mb-3">Before you start</h2>
     <ul class="space-y-2 text-md text-text-secondary list-disc pl-5">
@@ -129,26 +151,29 @@ JSON,
     </ul>
 </div>
 
-<div class="space-y-5">
-    <?php foreach ($endpoints as $ep): ?>
-        <div class="card">
-            <div class="flex items-center gap-3 mb-2">
+<div class="space-y-4">
+    <?php foreach ($endpoints as $i => $ep): ?>
+        <details class="doc-endpoint" id="ep-<?= e($ep['slug']) ?>" <?= $i === 0 ? 'open' : '' ?>>
+            <summary>
                 <?= method_badge($ep['method']) ?>
-                <code class="font-mono text-md text-text-primary font-semibold"><?= e($ep['path']) ?></code>
+                <code class="font-mono text-md text-text-primary font-semibold flex-1"><?= e($ep['path']) ?></code>
+                <?= icon('chevron-down', 'w-4 h-4 text-text-secondary shrink-0 doc-chevron') ?>
+            </summary>
+            <div class="doc-endpoint-body">
+                <p class="text-md text-text-secondary mb-4"><?= e($ep['summary']) ?></p>
+
+                <?php if ($ep['request']): ?>
+                    <p class="text-sm font-semibold text-text-primary mb-1.5">Request body</p>
+                    <?= code_block($ep['request']) ?>
+                    <div class="mt-3"></div>
+                <?php endif; ?>
+
+                <p class="text-sm font-semibold text-text-primary mb-1.5">Response</p>
+                <?= code_block($ep['response']) ?>
+
+                <p class="text-sm text-text-secondary mt-3"><?= icon('alert-circle', 'w-3.5 h-3.5 inline -mt-0.5 mr-1') ?><?= e($ep['notes']) ?></p>
             </div>
-            <p class="text-md text-text-secondary mb-4"><?= e($ep['summary']) ?></p>
-
-            <?php if ($ep['request']): ?>
-                <p class="text-sm font-semibold text-text-primary mb-1.5">Request body</p>
-                <?= code_block($ep['request']) ?>
-                <div class="mt-3"></div>
-            <?php endif; ?>
-
-            <p class="text-sm font-semibold text-text-primary mb-1.5">Response</p>
-            <?= code_block($ep['response']) ?>
-
-            <p class="text-sm text-text-secondary mt-3"><?= icon('alert-circle', 'w-3.5 h-3.5 inline -mt-0.5 mr-1') ?><?= e($ep['notes']) ?></p>
-        </div>
+        </details>
     <?php endforeach; ?>
 </div>
 

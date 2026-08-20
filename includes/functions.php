@@ -62,6 +62,23 @@ function json_response(bool $success, $data = null, string $message = '', int $s
     exit;
 }
 
+/**
+ * Canonical list of KYC document slots — shared by the KYC Verification
+ * page and its API endpoints so the UI and the DB enum never drift apart.
+ */
+function kyc_document_types(): array
+{
+    return [
+        'aadhar_card' => 'Aadhar Card',
+        'pan_card' => 'PAN Card',
+        'gst_certificate' => 'GST Certificate',
+        'board_resolution' => 'Board Resolution',
+        'certificate_of_incorporation' => 'Certificate of Incorporation',
+        'passport_photo' => 'Passport Size Photo',
+        'service_agreement' => 'Service Agreement',
+    ];
+}
+
 function generate_reference(string $type): string
 {
     $prefix = $type === 'deposit' ? 'DX' : 'WX';

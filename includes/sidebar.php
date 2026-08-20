@@ -10,6 +10,8 @@ $customerNav = [
     ['deposits', 'deposit', 'Deposits'],
     ['withdrawals', 'withdrawal', 'Withdrawals'],
     ['transactions', 'transactions', 'Transactions'],
+    ['identity-vault', 'profile', 'Identity Vault'],
+    ['kyc-verification', 'shield', 'KYC Verification'],
     ['support', 'support', 'Support'],
     ['notifications', 'notification', 'Notifications'],
 ];

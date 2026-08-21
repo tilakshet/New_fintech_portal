@@ -1,0 +1,70 @@
+﻿<?php
+$extraScripts = ['/assets/js/pages/admin-treasury.js'];
+?>
+<div class="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+    <div>
+        <h2 class="text-2xl font-semibold text-text-primary mb-1">Main Wallet Ledger</h2>
+        <p class="text-md text-text-secondary">Track credits, debits and running balance across every merchant.</p>
+    </div>
+    <a href="#" id="treasury-download" class="btn-primary shrink-0"><?= icon('download', 'w-4 h-4') ?>Download report</a>
+</div>
+
+<div class="card mb-5">
+    <form id="treasury-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div class="lg:col-span-2">
+            <label for="tf-search" class="field-label"><?= icon('search', 'w-3.5 h-3.5 inline -mt-0.5 mr-1') ?>Search reference, merchant or email</label>
+            <input type="search" id="tf-search" name="search" class="field-input" placeholder="DX-A1B2, Priya, priya@…">
+        </div>
+        <div>
+            <label for="tf-type" class="field-label">Service type</label>
+            <select id="tf-type" name="type" class="field-input">
+                <option value="">All service types</option>
+                <option value="deposit">Deposit</option>
+                <option value="withdrawal">Withdrawal</option>
+            </select>
+        </div>
+        <div>
+            <label for="tf-from" class="field-label">Date from</label>
+            <input type="date" id="tf-from" name="from" class="field-input">
+        </div>
+        <div>
+            <label for="tf-to" class="field-label">Date to</label>
+            <input type="date" id="tf-to" name="to" class="field-input">
+        </div>
+    </form>
+</div>
+
+<div class="card !p-0 overflow-hidden">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-b border-border">
+        <label class="text-sm text-text-secondary flex items-center gap-2">
+            Show
+            <select id="treasury-per-page" class="field-input !w-auto !py-1.5">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            entries
+        </label>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="table-base" id="treasury-table">
+            <thead>
+                <tr>
+                    <th scope="col">Timestamp</th>
+                    <th scope="col">Merchant name</th>
+                    <th scope="col">Service type</th>
+                    <th scope="col">Transaction ID</th>
+                    <th scope="col">Credit (+)</th>
+                    <th scope="col">Debit (-)</th>
+                    <th scope="col">Net balance</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody id="treasury-tbody">
+                <tr><td colspan="8" class="text-center py-8 text-text-secondary">Loading ledger…</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-4 border-t border-border" id="treasury-pagination"></div>
+</div>

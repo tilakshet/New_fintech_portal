@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Expects $user (array) and $route (string) in scope, set by public/index.php.
  */
@@ -23,6 +23,7 @@ $adminNav = [
     ['admin/gateways', 'gateway', 'Payment gateways', [
         ['admin/gateways', 'gateway', 'Manage gateways'],
         ['admin/gateways/docs', 'documentation', 'Documentation'],
+        ['admin/treasury', 'treasury', 'Treasury Node'],
     ]],
     ['admin/support', 'support', 'Support inbox'],
     ['admin/audit-log', 'shield', 'Audit log'],
@@ -31,7 +32,7 @@ $adminNav = [
 
 if ($user['role'] === 'operator') {
     // Payment gateway management is admin-only at the route level
-    // (public/index.php) — don't show operators a link that 403s.
+    // (public/index.php) â€” don't show operators a link that 403s.
     $adminNav = array_values(array_filter($adminNav, fn($entry) => $entry[0] !== 'admin/gateways'));
 }
 $navItems = in_array($user['role'], ['admin', 'operator'], true) ? $adminNav : $customerNav;
@@ -42,7 +43,7 @@ $footerNav = [
 
 /**
  * Renders one nav entry. Entries with a 4th (children) element render as
- * an expandable group — a labeled toggle button plus an indented sub-list —
+ * an expandable group â€” a labeled toggle button plus an indented sub-list â€”
  * rather than a direct link. Expanded by default whenever the current
  * route matches the group or one of its children.
  */

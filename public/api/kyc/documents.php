@@ -16,7 +16,7 @@ $stmt->execute([$user['id']]);
 
 $documents = [];
 foreach ($stmt->fetchAll() as $row) {
-    $documents[$row['document_type']] = [
+       $documents[$row['document_type']] = [
         'original_filename' => $row['original_filename'],
         'status' => $row['status'],
         'file_size' => (int) $row['file_size'],

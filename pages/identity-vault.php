@@ -1,9 +1,17 @@
 ﻿<?php
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/identity-vault.js'];
+
+render_hero_banner(
+    $user,
+    'Identity Vault',
+    'Your account, business, and settlement details.',
+    [
+        ['id' => 'hero-account-id', 'label' => 'Account ID #' . (int) $user['id'], 'tone' => 'neutral'],
+        ['id' => 'hero-verified-badge', 'label' => 'KYC verified', 'tone' => 'success', 'hidden' => true],
+    ]
+);
 ?>
-<div class="mb-6">
-    <p class="text-md text-text-secondary">Your account, business, and settlement details.</p>
-</div>
 
 <div id="identity-vault-loading" class="card text-center py-12">
     <p class="text-md text-text-secondary">Loading...</p>

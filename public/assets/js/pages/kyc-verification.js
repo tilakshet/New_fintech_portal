@@ -19,7 +19,7 @@
             badge.className = 'badge ' + (badgeClass[doc.status] || 'badge-neutral');
             badge.classList.remove('hidden');
             filenameText.textContent = doc.original_filename;
-            viewLink.href = `/api/kyc/download.php?type=${encodeURIComponent(type)}`;
+            viewLink.href = `/api/kyc/download.php?document_type=${encodeURIComponent(type)}`;
             filenameWrap.classList.remove('hidden');
             if (submitBtn) submitBtn.textContent = 'Replace';
         } else {

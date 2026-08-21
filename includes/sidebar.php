@@ -29,6 +29,11 @@ $adminNav = [
     ['notifications', 'notification', 'Notifications'],
 ];
 
+if ($user['role'] === 'operator') {
+    // Payment gateway management is admin-only at the route level
+    // (public/index.php) — don't show operators a link that 403s.
+    $adminNav = array_values(array_filter($adminNav, fn($entry) => $entry[0] !== 'admin/gateways'));
+}
 $navItems = in_array($user['role'], ['admin', 'operator'], true) ? $adminNav : $customerNav;
 $footerNav = [
     ['profile', 'profile', 'Profile'],

@@ -1,11 +1,17 @@
 ﻿<?php
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/kyc-verification.js'];
 $docTypes = kyc_document_types();
-?>
-<div class="mb-6">
-    <p class="text-md text-text-secondary">Securely upload and verify your business identity.</p>
-</div>
 
+render_hero_banner(
+    $user,
+    'KYC Verification',
+    'Securely upload and verify your business identity.',
+    [
+        ['id' => 'hero-account-id', 'label' => 'Account ID #' . (int) $user['id'], 'tone' => 'neutral'],
+    ]
+);
+?>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
     <?php foreach ($docTypes as $type => $label): ?>
     <div class="card" data-doc-card="<?= e($type) ?>">

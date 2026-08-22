@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Minimal original icon set — 1.75px stroke, 24x24 viewBox, no fill.
+ * Minimal original icon set â€” 1.75px stroke, 24x24 viewBox, no fill.
  * Kept as static trusted SVG markup (not user input, safe to echo raw).
  */
 
@@ -38,6 +38,9 @@ function icon(string $name, string $class = 'w-5 h-5'): string
         'gateway' => '<rect x="3" y="9" width="7" height="7" rx="1.5"/><rect x="14" y="9" width="7" height="7" rx="1.5"/><path d="M10 12.5h4"/><path d="M6.5 9V6a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 17.5 6v3"/>',
         'key' => '<circle cx="8" cy="15.5" r="4"/><path d="M11.2 12.3 19 4.5M19 4.5h-3.2M19 4.5v3.2M15.5 8 17.5 10"/>',
         'upload' => '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>',
+        'download' => '<path d="M12 4v11M8.5 11.5 12 15l3.5-3.5"/><path d="M4 16v3.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V16"/>',
+        'treasury' => '<rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 9.8V12l1.6 1"/><path d="M3 9h2.2M3 15h2.2M18.8 9H21M18.8 15H21"/>',
+        'documentation' => '<path d="M7 3.5h7L18 7v13.5H7Z"/><path d="M14 3.5V7h4"/><path d="M9.5 12h5M9.5 15.5h5"/>',
     ];
 
     $path = $paths[$name] ?? $paths['alert-circle'];

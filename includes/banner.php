@@ -9,7 +9,7 @@
  * runs on UTC — see config.php — which is very often not the viewer's
  * timezone). Purely decorative: no data-bearing content lives only here.
  */
-function render_hero_banner(array $user, string $eyebrow, string $blurb): void
+function render_hero_banner(array $user, string $eyebrow, string $blurb, array $extraBadges = []): void
 {
     $hour = (int) date('G');
 
@@ -62,10 +62,18 @@ function render_hero_banner(array $user, string $eyebrow, string $blurb): void
                 </div>
             </div>
             <div class="flex items-center gap-3 shrink-0">
-                <span class="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white">
+                                <span class="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white">
                     <span class="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true"></span>
                     Account secure
                 </span>
+                <?php foreach ($extraBadges as $badge): ?>
+                <span id="<?= e($badge['id'] ?? '') ?>" class="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white<?= !empty($badge['hidden']) ? ' hidden' : '' ?>">
+                    <?php if (($badge['tone'] ?? '') === 'success'): ?>
+                    <span class="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true"></span>
+                    <?php endif; ?>
+                    <?= e($badge['label'] ?? '') ?>
+                </span>
+                              <?php endforeach; ?>
                 <span id="hero-clock" class="hidden sm:block text-sm text-white/70 font-mono" aria-live="off"></span>
             </div>
         </div>

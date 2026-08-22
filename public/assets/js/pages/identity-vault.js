@@ -18,19 +18,21 @@
         }
 
         // Settlement bank
-        if (data.settlement_bank) {
+                // Settlement bank
+        if (data.bank) {
             document.getElementById('settlement-readonly').classList.remove('hidden');
             document.getElementById('settlement-empty').classList.add('hidden');
-            set('sb-holder', data.settlement_bank.account_holder);
-            set('sb-account', data.settlement_bank.account_number);
-            set('sb-ifsc', data.settlement_bank.ifsc_code);
-            set('sb-bank', data.settlement_bank.bank_name);
+            set('sb-holder', data.bank.account_holder);
+            set('sb-account', data.bank.account_number);
+            set('sb-ifsc', data.bank.ifsc_code);
+            set('sb-bank', data.bank.bank_name);
         } else {
             document.getElementById('settlement-empty').classList.remove('hidden');
         }
 
         // Business & KYC
-        if (data.locked && data.profile) {
+        if (data.kyc_locked && data.profile) {
+            document.getElementById('hero-verified-badge').classList.remove('hidden');
             document.getElementById('kyc-locked-banner').classList.remove('hidden');
             document.getElementById('kyc-form').classList.add('hidden');
             const ro = document.getElementById('kyc-readonly');

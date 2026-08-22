@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Minimal original icon set â€” 1.75px stroke, 24x24 viewBox, no fill.
  * Kept as static trusted SVG markup (not user input, safe to echo raw).

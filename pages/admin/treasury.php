@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $extraScripts = ['/assets/js/pages/admin-treasury.js'];
 ?>
 <div class="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

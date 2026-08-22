@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/kyc-verification.js'];
 $docTypes = kyc_document_types();

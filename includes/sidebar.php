@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Expects $user (array) and $route (string) in scope, set by public/index.php.
  */

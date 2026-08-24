@@ -9,6 +9,18 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function user_avatar_markup(array $user, string $iconClass = 'w-4 h-4'): string
+{
+    $gender = $user['gender'] ?? null;
+    if ($gender === 'male') {
+        return icon('avatar-male', $iconClass);
+    }
+    if ($gender === 'female') {
+        return icon('avatar-female', $iconClass);
+    }
+    return e($user['avatar_initials'] ?? substr($user['name'], 0, 2));
+}
+
 function money_format(string $amount, string $currency = 'INR'): string
 {
     $symbols = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'];

@@ -1,6 +1,16 @@
 <?php
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/notifications.js'];
+
+render_hero_banner(
+    $user,
+    'Updates',
+    'Account, payment, and security updates.'
+);
 ?>
+<div class="mb-6 flex items-center justify-end">
+    <button type="button" id="mark-all-read" class="btn-tertiary">Mark all as read</button>
+</div>
 <div class="mb-6 flex items-center justify-between gap-4">
     <p class="text-md text-text-secondary">Account, payment, and security updates.</p>
     <button type="button" id="mark-all-read" class="btn-tertiary">Mark all as read</button>

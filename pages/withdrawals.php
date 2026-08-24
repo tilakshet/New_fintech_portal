@@ -1,6 +1,13 @@
 <?php
 /** Customer-only. $user in scope. */
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/withdrawals.js'];
+
+render_hero_banner(
+    $user,
+    'Move funds',
+    'Send money from your Verapay balance to your bank account.'
+);
 ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary">Move funds from your Verapay balance to your bank account.</p>

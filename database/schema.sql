@@ -8,6 +8,7 @@ CREATE TABLE users (
     role ENUM('customer', 'operator', 'admin') NOT NULL DEFAULT 'customer',
     status ENUM('active', 'suspended') NOT NULL DEFAULT 'active',
     avatar_initials VARCHAR(4) NULL,
+    gender ENUM('male', 'female', 'other') NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_users_email (email),

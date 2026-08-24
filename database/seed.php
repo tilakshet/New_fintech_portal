@@ -27,19 +27,19 @@ try {
     $hash = password_hash($demoPassword, PASSWORD_DEFAULT);
 
     $insertUser = $pdo->prepare(
-        'INSERT INTO users (name, email, password_hash, role, status, avatar_initials) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO users (name, email, password_hash, role, status, avatar_initials, gender) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
 
     $users = [
-        ['Ava Whitfield', 'admin@verapay.test', 'admin', 'active', 'AW'],
-        ['Marcus Deng', 'operator@verapay.test', 'operator', 'active', 'MD'],
-        ['Priya Natarajan', 'priya@verapay.test', 'customer', 'active', 'PN'],
-        ['Jonah Ferreira', 'jonah@verapay.test', 'customer', 'active', 'JF'],
+        ['Ava Whitfield', 'admin@verapay.test', 'admin', 'active', 'AW', 'female'],
+        ['Marcus Deng', 'operator@verapay.test', 'operator', 'active', 'MD', 'male'],
+        ['Priya Natarajan', 'priya@verapay.test', 'customer', 'active', 'PN', 'female'],
+        ['Jonah Ferreira', 'jonah@verapay.test', 'customer', 'active', 'JF', 'male'],
     ];
 
     $userIds = [];
-    foreach ($users as [$name, $email, $role, $status, $initials]) {
-        $insertUser->execute([$name, $email, $hash, $role, $status, $initials]);
+    foreach ($users as [$name, $email, $role, $status, $initials, $gender]) {
+        $insertUser->execute([$name, $email, $hash, $role, $status, $initials, $gender ]);
         $userIds[$email] = (int) $pdo->lastInsertId();
     }
 

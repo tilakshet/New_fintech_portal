@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/banner.php';
 $isOperator = in_array($user['role'], ['admin', 'operator'], true);
 $extraScripts = ['/assets/js/pages/transactions.js'];
 
@@ -6,6 +7,12 @@ $extraScripts = ['/assets/js/pages/transactions.js'];
 // (e.g. from the dashboard report cards), so the landing view actually matches what was clicked.
 $initialType = in_array($_GET['type'] ?? '', ['deposit', 'withdrawal'], true) ? $_GET['type'] : '';
 $initialStatus = in_array($_GET['status'] ?? '', ['success', 'pending', 'failed', 'cancelled', 'refunded'], true) ? $_GET['status'] : '';
+
+render_hero_banner(
+    $user,
+    $isOperator ? 'Platform activity' : 'Your activity',
+    $isOperator ? 'Every payment across the platform, filterable and exportable.' : 'A complete record of your deposits and withdrawals.'
+);
 ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary"><?= $isOperator ? 'Every payment across the platform.' : 'A complete record of your deposits and withdrawals.' ?></p>

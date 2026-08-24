@@ -16,10 +16,14 @@
             nameInput.focus();
             return;
         }
-
+        
+        const genderSelect = document.getElementById('p-gender');
         const submitBtn = document.getElementById('profile-submit');
         setButtonLoading(submitBtn, true);
-        const { success, message } = await apiFetch('/api/profile/update.php', { method: 'POST', body: { name: nameInput.value.trim() } });
+       const { success, message } = await apiFetch('/api/profile/update.php', {
+            method: 'POST',
+            body: { name: nameInput.value.trim(), gender: genderSelect ? genderSelect.value : '' },
+        });
         setButtonLoading(submitBtn, false);
 
         if (!success) {
@@ -28,6 +32,7 @@
             return;
         }
         showToast('Profile updated.', 'success');
+        setTimeout(() => window.location.reload(), 600);
     });
 
     // ---------------- Business & KYC / settlement bank (customer only) ----------------

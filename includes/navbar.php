@@ -35,7 +35,7 @@ $unreadCount = (int) $unreadStmt->fetchColumn();
 
         <div class="relative">
             <button type="button" id="profile-toggle" class="flex items-center gap-2.5 rounded-sm px-2 py-1.5 hover:bg-surface-muted transition-colors duration-instant" aria-haspopup="true" aria-expanded="false" aria-controls="profile-panel">
-                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-sm shrink-0" aria-hidden="true"><?= e($user['avatar_initials'] ?? substr($user['name'], 0, 2)) ?></span>
+                <span class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-sm shrink-0" aria-hidden="true"><?= user_avatar_markup($user, 'w-6 h-6') ?></span>
                 <span class="hidden sm:block text-left leading-tight">
                     <span class="block text-md font-semibold text-text-primary"><?= e($user['name']) ?></span>
                     <span class="block text-sm text-text-secondary capitalize"><?= e($user['role']) ?></span>

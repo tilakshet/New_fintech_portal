@@ -1,14 +1,16 @@
 ﻿<?php
+require_once __DIR__ . '/../../includes/banner.php';
 $extraScripts = ['/assets/js/pages/admin-treasury.js'];
+
+render_hero_banner(
+    $user,
+    'Treasury Node',
+    'Track credits, debits and running balance across every merchant.'
+);
 ?>
-<div class="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-    <div>
-        <h2 class="text-2xl font-semibold text-text-primary mb-1">Main Wallet Ledger</h2>
-        <p class="text-md text-text-secondary">Track credits, debits and running balance across every merchant.</p>
-    </div>
+<div class="mb-6 flex justify-end">
     <a href="#" id="treasury-download" class="btn-primary shrink-0"><?= icon('download', 'w-4 h-4') ?>Download report</a>
 </div>
-
 <div class="card mb-5">
     <form id="treasury-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <div class="lg:col-span-2">
@@ -50,7 +52,7 @@ $extraScripts = ['/assets/js/pages/admin-treasury.js'];
     <div class="overflow-x-auto">
         <table class="table-base" id="treasury-table">
             <thead>
-                <tr>
+                  <tr>
                     <th scope="col">Timestamp</th>
                     <th scope="col">Merchant name</th>
                     <th scope="col">Service type</th>

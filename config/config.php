@@ -25,6 +25,10 @@ define('KYC_UPLOAD_DIR', APP_ROOT . '/storage/kyc-uploads');
 define('KYC_UPLOAD_MAX_BYTES', 5 * 1024 * 1024); // 5MB per file
 define('KYC_UPLOAD_ALLOWED_MIME', ['application/pdf', 'image/jpeg', 'image/png']);
 
+// Signing secret for platform API bearer tokens. Must stay stable across
+// regenerations — rotating this invalidates every previously-issued token.
+define('PLATFORM_JWT_SECRET', env('PLATFORM_JWT_SECRET', 'dev-only-insecure-secret-change-in-env'));
+
 error_reporting(E_ALL);
 ini_set('display_errors', APP_DEBUG ? '1' : '0');
 ini_set('log_errors', '1');

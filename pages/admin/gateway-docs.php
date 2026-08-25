@@ -1,4 +1,4 @@
-<?php
+<?php require_once __DIR__ . '/../../includes/banner.php';
 /** Admin only. Static reference page — collapsible endpoints, copyable code blocks. */
 $extraScripts = ['/assets/js/pages/gateway-docs.js'];
 
@@ -126,9 +126,13 @@ JSON,
         'notes' => 'Rejected if the gateway is the current default — reassign the default first. This cannot be undone.',
     ],
 ];
-?>
-<div class="mb-6 flex items-center justify-between gap-4">
-    <p class="text-md text-text-secondary max-w-2xl">Reference for the payment gateway management API. All endpoints live under <code class="font-mono text-sm bg-surface-muted px-1.5 py-0.5 rounded-sm">/api/admin/gateways/</code>.</p>
+
+render_hero_banner(
+    $user,
+    'Gateway documentation',
+    'Reference for the payment gateway management API. All endpoints live under /api/admin/gateways/.'
+); ?>
+<div class="mb-6 flex justify-end">
     <a href="/admin/gateways" class="btn-secondary shrink-0"><?= icon('gateway', 'w-4 h-4') ?>Manage gateways</a>
 </div>
 

@@ -9,32 +9,48 @@ $pdo = db();
 
 [$page, $perPage, $offset] = paginate_params(20, 100);
 
-$where = ["role != 'admin'"];
+$where = ["u.role != 'admin'"];
 $params = [];
-
 if (in_array($_GET['status'] ?? '', ['active', 'suspended'], true)) {
-    $where[] = 'status = :status';
+    $where[] = 'u.status = :status';
     $params['status'] = $_GET['status'];
 }
 if (!empty($_GET['search'])) {
     // Real (non-emulated) prepared statements require a distinct bound
     // parameter per placeholder occurrence, even when the value repeats.
-    $where[] = '(name LIKE :search1 OR email LIKE :search2)';
+    $where[] = '(u.name LIKE :search1 OR u.email LIKE :search2)';
     $params['search1'] = $params['search2'] = '%' . $_GET['search'] . '%';
 }
 
 $whereSql = implode(' AND ', $where);
+$totalDocTypes = count(kyc_document_types());
 
-$stmt = $pdo->prepare("SELECT id, name, email, role, status, avatar_initials, created_at FROM users WHERE {$whereSql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+$stmt = $pdo->prepare(
+    "SELECT u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.created_at,
+        COUNT(k.id) AS kyc_uploaded_count,
+        SUM(CASE WHEN k.status = 'pending' THEN 1 ELSE 0 END) AS kyc_pending_count,
+        SUM(CASE WHEN k.status = 'verified' THEN 1 ELSE 0 END) AS kyc_verified_count
+     FROM users u
+     LEFT JOIN kyc_documents k ON k.user_id = u.id
+     WHERE {$whereSql}
+     GROUP BY u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.created_at
+     ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset"
+);
 foreach ($params as $key => $value) {
     $stmt->bindValue(":{$key}", $value);
 }
 $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
-$users = $stmt->fetchAll();
+$users = array_map(static function (array $row) use ($totalDocTypes): array {
+    $row['kyc_uploaded_count'] = (int) $row['kyc_uploaded_count'];
+    $row['kyc_pending_count'] = (int) $row['kyc_pending_count'];
+    $row['kyc_verified_count'] = (int) $row['kyc_verified_count'];
+    $row['kyc_total_types'] = $totalDocTypes;
+    return $row;
+}, $stmt->fetchAll());
 
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE {$whereSql}");
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM users u WHERE {$whereSql}");
 foreach ($params as $key => $value) {
     $countStmt->bindValue(":{$key}", $value);
 }

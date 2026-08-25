@@ -1,6 +1,13 @@
 <?php
 /** Admin/operator only. $user in scope. */
+require_once __DIR__ . '/../../includes/banner.php';
 $extraScripts = ['/assets/js/pages/admin-support.js'];
+
+render_hero_banner(
+    $user,
+    'Support inbox',
+    'Customer conversations. Replies are delivered to the customer immediately.'
+);
 ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary">Customer conversations. Replies are delivered to the customer immediately.</p>

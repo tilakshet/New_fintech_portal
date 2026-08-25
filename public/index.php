@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * Front controller. Document root is /public — everything else (config,
+ * Front controller. Document root is /public â€” everything else (config,
  * includes, pages, database) lives one level up and is include-only,
  * never directly web-requestable.
  */
@@ -53,6 +53,7 @@ $routes = [
     'identity-vault' => ['pages/identity-vault.php', 'Identity Vault', ['customer']],
     'kyc-verification' => ['pages/kyc-verification.php', 'KYC Verification', ['customer']],
     'admin/users' => ['pages/admin/users.php', 'Customers', ['admin', 'operator']],
+    'admin/kyc-review' => ['pages/admin/kyc-review.php', 'KYC Review', ['admin']],
     'admin/gateways' => ['pages/admin/gateways.php', 'Payment gateways', ['admin']],
     'admin/gateways/docs' => ['pages/admin/gateway-docs.php', 'Gateway documentation', ['admin']],
     'admin/treasury' => ['pages/admin/treasury.php', 'Treasury Node', ['admin']],

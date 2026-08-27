@@ -1,39 +1,100 @@
-(function () {
+﻿(function () {
     'use strict';
-    const { apiFetch, showToast, setButtonLoading, escapeHtml, openModal, closeModal } = window.Verapay;
+
+    const {
+        apiFetch,
+        showToast,
+        setButtonLoading,
+        escapeHtml,
+        openModal,
+        closeModal
+    } = window.Verapay;
 
     const form = document.getElementById('filters-form');
     const tbody = document.getElementById('users-tbody');
     const pagination = document.getElementById('users-pagination');
+
+    const addCustomerForm = document.getElementById('add-customer-form');
+    const addCustomerSubmit = document.getElementById('ac-submit');
+    const addCustomerError = document.getElementById('ac-error');
+
     let searchDebounce;
     let pendingTarget = null;
 
     function buildQuery(page) {
         const params = new URLSearchParams(new FormData(form));
-        [...params.keys()].forEach((k) => { if (!params.get(k)) params.delete(k); });
+
+        [...params.keys()].forEach((key) => {
+            if (!params.get(key)) {
+                params.delete(key);
+            }
+        });
+
         params.set('page', page);
         params.set('per_page', 15);
+
         return params.toString();
     }
 
     async function load(page = 1) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-text-secondary">Loading customers…</td></tr>';
-        const { success, data, message } = await apiFetch('/api/admin/users/list.php?' + buildQuery(page));
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    class="text-center py-8 text-text-secondary">
+                    Loading customers…
+                </td>
+            </tr>
+        `;
+
+        const {
+            success,
+            data,
+            message
+        } = await apiFetch(
+            '/api/admin/users/list.php?' + buildQuery(page)
+        );
 
         if (!success) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10">
-                <p class="text-md text-text-primary font-medium mb-1">We couldn't load customers.</p>
-                <p class="text-sm text-text-secondary mb-4">${escapeHtml(message || 'Please try again.')}</p>
-                <button class="btn-secondary" id="users-retry">Try again</button>
-            </td></tr>`;
-            document.getElementById('users-retry')?.addEventListener('click', () => load(page));
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-10">
+                        <p class="text-md text-text-primary font-medium mb-1">
+                            We couldn't load customers.
+                        </p>
+
+                        <p class="text-sm text-text-secondary mb-4">
+                            ${escapeHtml(message || 'Please try again.')}
+                        </p>
+
+                        <button class="btn-secondary"
+                                id="users-retry">
+                            Try again
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            document
+                .getElementById('users-retry')
+                ?.addEventListener('click', () => load(page));
+
             pagination.innerHTML = '';
+
             return;
         }
 
         if (!data.users.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-text-secondary">No customers match these filters.</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5"
+                        class="text-center py-10 text-text-secondary">
+                        No customers match these filters.
+                    </td>
+                </tr>
+            `;
+
             pagination.innerHTML = '';
+
             return;
         }
 
@@ -41,75 +102,332 @@
             <tr>
                 <td>
                     <span class="flex items-center gap-2.5">
-                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-sm shrink-0">${escapeHtml(u.avatar_initials || u.name.slice(0, 2))}</span>
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-sm shrink-0">
+                            ${escapeHtml(u.avatar_initials || u.name.slice(0, 2))}
+                        </span>
+
                         <span class="min-w-0">
-                            <span class="block text-md font-medium text-text-primary truncate">${escapeHtml(u.name)}</span>
-                            <span class="block text-sm text-text-secondary truncate">${escapeHtml(u.email)}</span>
+                            <span class="block text-md font-medium text-text-primary truncate">
+                                ${escapeHtml(u.name)}
+                            </span>
+
+                            <span class="block text-sm text-text-secondary truncate">
+                                ${escapeHtml(u.email)}
+                            </span>
                         </span>
                     </span>
                 </td>
-                <td class="capitalize">${escapeHtml(u.role)}</td>
-                <td><span class="${u.status === 'active' ? 'badge-success' : 'badge-danger'}">${escapeHtml(u.status)}</span></td>
-                <td class="text-text-secondary whitespace-nowrap">${new Date(u.created_at).toLocaleDateString()}</td>
-                <td class="text-right">
-                    ${u.status === 'active'
-                        ? `<button type="button" class="btn-danger !px-3 !py-2 suspend-btn" data-id="${u.id}" data-name="${escapeHtml(u.name)}">Suspend</button>`
-                        : `<button type="button" class="btn-secondary !px-3 !py-2 reactivate-btn" data-id="${u.id}" data-name="${escapeHtml(u.name)}">Reactivate</button>`}
+
+                <td class="capitalize">
+                    ${escapeHtml(u.role)}
                 </td>
-            </tr>`).join('');
 
-        tbody.querySelectorAll('.suspend-btn').forEach((btn) => btn.addEventListener('click', () => {
-            pendingTarget = { id: btn.dataset.id, name: btn.dataset.name, page };
-            document.getElementById('suspend-modal-body').textContent =
-                `${btn.dataset.name} will be signed out immediately and unable to access Verapay until reactivated.`;
-            openModal('suspend-modal');
-        }));
-        tbody.querySelectorAll('.reactivate-btn').forEach((btn) => btn.addEventListener('click', () => {
-            pendingTarget = { id: btn.dataset.id, name: btn.dataset.name, page };
-            document.getElementById('reactivate-modal-body').textContent =
-                `${btn.dataset.name} will regain access to Verapay and can sign in again.`;
-            openModal('reactivate-modal');
-        }));
+                <td>
+                    <span class="${u.status === 'active'
+                        ? 'badge-success'
+                        : 'badge-danger'}">
+                        ${escapeHtml(u.status)}
+                    </span>
+                </td>
 
-        const { page: p, total_pages, total } = data.pagination;
+                <td class="text-text-secondary whitespace-nowrap">
+                    ${new Date(u.created_at).toLocaleDateString()}
+                </td>
+
+                <td class="text-right">
+                    <span class="inline-flex items-center gap-2">
+                        ${u.role === 'customer'
+                            ? `
+                                <a href="/admin/kyc-review?user_id=${u.id}"
+                                   class="btn-secondary !px-3 !py-2 inline-flex items-center gap-1.5"
+                                   title="${u.kyc_uploaded_count}/${u.kyc_total_types} documents uploaded${u.kyc_pending_count ? `, ${u.kyc_pending_count} pending review` : ''}">
+                                    KYC
+                                    ${u.kyc_pending_count > 0
+                                        ? `<span class="badge-warning !px-1.5 !py-0.5 !text-xs">${u.kyc_pending_count}</span>`
+                                        : ''}
+                                </a>
+                            `
+                            : ''}
+
+                        ${u.status === 'active'
+                            ? `
+                                <button type="button"
+                                        class="btn-danger !px-3 !py-2 suspend-btn"
+                                        data-id="${u.id}"
+                                        data-name="${escapeHtml(u.name)}">
+                                    Suspend
+                                </button>
+                            `
+                            : `
+                                <button type="button"
+                                        class="btn-secondary !px-3 !py-2 reactivate-btn"
+                                        data-id="${u.id}"
+                                        data-name="${escapeHtml(u.name)}">
+                                    Reactivate
+                                </button>
+                            `}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody
+            .querySelectorAll('.suspend-btn')
+            .forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    pendingTarget = {
+                        id: btn.dataset.id,
+                        name: btn.dataset.name,
+                        page
+                    };
+
+                    document
+                        .getElementById('suspend-modal-body')
+                        .textContent =
+                        `${btn.dataset.name} will be signed out immediately and unable to access Verapay until reactivated.`;
+
+                    openModal('suspend-modal');
+                });
+            });
+
+        tbody
+            .querySelectorAll('.reactivate-btn')
+            .forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    pendingTarget = {
+                        id: btn.dataset.id,
+                        name: btn.dataset.name,
+                        page
+                    };
+
+                    document
+                        .getElementById('reactivate-modal-body')
+                        .textContent =
+                        `${btn.dataset.name} will regain access to Verapay and can sign in again.`;
+
+                    openModal('reactivate-modal');
+                });
+            });
+
+        const {
+            page: currentPage,
+            total_pages,
+            total
+        } = data.pagination;
+
         pagination.innerHTML = `
-            <span class="text-sm text-text-secondary">Showing page ${p} of ${total_pages} (${total} total)</span>
+            <span class="text-sm text-text-secondary">
+                Showing page ${currentPage} of ${total_pages} (${total} total)
+            </span>
+
             <div class="flex items-center gap-2">
-                <button type="button" class="btn-secondary !px-4 !py-2" id="users-prev" ${p <= 1 ? 'disabled' : ''}>Previous</button>
-                <button type="button" class="btn-secondary !px-4 !py-2" id="users-next" ${p >= total_pages ? 'disabled' : ''}>Next</button>
-            </div>`;
-        document.getElementById('users-prev')?.addEventListener('click', () => load(p - 1));
-        document.getElementById('users-next')?.addEventListener('click', () => load(p + 1));
+                <button type="button"
+                        class="btn-secondary !px-4 !py-2"
+                        id="users-prev"
+                        ${currentPage <= 1 ? 'disabled' : ''}>
+                    Previous
+                </button>
+
+                <button type="button"
+                        class="btn-secondary !px-4 !py-2"
+                        id="users-next"
+                        ${currentPage >= total_pages ? 'disabled' : ''}>
+                    Next
+                </button>
+            </div>
+        `;
+
+        document
+            .getElementById('users-prev')
+            ?.addEventListener('click', () => load(currentPage - 1));
+
+        document
+            .getElementById('users-next')
+            ?.addEventListener('click', () => load(currentPage + 1));
     }
 
-    document.getElementById('suspend-confirm-btn').addEventListener('click', async function () {
-        if (!pendingTarget) return;
-        setButtonLoading(this, true);
-        const { success, message } = await apiFetch('/api/admin/users/suspend.php', { method: 'POST', body: { user_id: pendingTarget.id } });
-        setButtonLoading(this, false);
-        closeModal('suspend-modal');
-        showToast(message, success ? 'success' : 'error');
-        if (success) load(pendingTarget.page);
+    addCustomerForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        addCustomerError.classList.add('hidden');
+        addCustomerError.textContent = '';
+
+        const name = document
+            .getElementById('ac-name')
+            .value
+            .trim();
+
+        const email = document
+            .getElementById('ac-email')
+            .value
+            .trim();
+
+        const password = document
+            .getElementById('ac-password')
+            .value;
+
+        const gender = document
+            .getElementById('ac-gender')
+            .value;
+
+        if (!name) {
+            addCustomerError.textContent = 'Please enter the customer name.';
+            addCustomerError.classList.remove('hidden');
+            return;
+        }
+
+        if (!email) {
+            addCustomerError.textContent = 'Please enter the customer email.';
+            addCustomerError.classList.remove('hidden');
+            return;
+        }
+
+        if (password.length < 8) {
+            addCustomerError.textContent =
+                'Password must contain at least 8 characters.';
+
+            addCustomerError.classList.remove('hidden');
+
+            return;
+        }
+
+        setButtonLoading(addCustomerSubmit, true);
+
+        const {
+            success,
+            message
+        } = await apiFetch(
+            '/api/admin/users/create.php',
+            {
+                method: 'POST',
+                body: {
+                    name,
+                    email,
+                    password,
+                    gender
+                }
+            }
+        );
+
+        setButtonLoading(addCustomerSubmit, false);
+
+        if (!success) {
+            addCustomerError.textContent =
+                message || 'Unable to create the customer.';
+
+            addCustomerError.classList.remove('hidden');
+
+            return;
+        }
+
+        closeModal('add-customer-modal');
+
+        addCustomerForm.reset();
+
+        showToast(
+            message || 'Customer created successfully.',
+            'success'
+        );
+
+        load(1);
     });
 
-    document.getElementById('reactivate-confirm-btn').addEventListener('click', async function () {
-        if (!pendingTarget) return;
-        setButtonLoading(this, true);
-        const { success, message } = await apiFetch('/api/admin/users/reactivate.php', { method: 'POST', body: { user_id: pendingTarget.id } });
-        setButtonLoading(this, false);
-        closeModal('reactivate-modal');
-        showToast(message, success ? 'success' : 'error');
-        if (success) load(pendingTarget.page);
-    });
+    document
+        .getElementById('suspend-confirm-btn')
+        .addEventListener('click', async function () {
+            if (!pendingTarget) {
+                return;
+            }
 
-    form.addEventListener('input', (e) => {
-        if (e.target.id === 'f-search') {
+            setButtonLoading(this, true);
+
+            const {
+                success,
+                message
+            } = await apiFetch(
+                '/api/admin/users/suspend.php',
+                {
+                    method: 'POST',
+                    body: {
+                        user_id: pendingTarget.id
+                    }
+                }
+            );
+
+            setButtonLoading(this, false);
+
+            closeModal('suspend-modal');
+
+            showToast(
+                message,
+                success ? 'success' : 'error'
+            );
+
+            if (success) {
+                load(pendingTarget.page);
+            }
+
+            pendingTarget = null;
+        });
+
+    document
+        .getElementById('reactivate-confirm-btn')
+        .addEventListener('click', async function () {
+            if (!pendingTarget) {
+                return;
+            }
+
+            setButtonLoading(this, true);
+
+            const {
+                success,
+                message
+            } = await apiFetch(
+                '/api/admin/users/reactivate.php',
+                {
+                    method: 'POST',
+                    body: {
+                        user_id: pendingTarget.id
+                    }
+                }
+            );
+
+            setButtonLoading(this, false);
+
+            closeModal('reactivate-modal');
+
+            showToast(
+                message,
+                success ? 'success' : 'error'
+            );
+
+            if (success) {
+                load(pendingTarget.page);
+            }
+
+            pendingTarget = null;
+        });
+
+    form.addEventListener('input', (event) => {
+        if (event.target.id === 'f-search') {
             clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(() => load(1), 350);
+
+            searchDebounce = setTimeout(() => {
+                load(1);
+            }, 350);
         }
     });
-    form.addEventListener('change', (e) => { if (e.target.id !== 'f-search') load(1); });
-    form.addEventListener('submit', (e) => { e.preventDefault(); load(1); });
+
+    form.addEventListener('change', (event) => {
+        if (event.target.id !== 'f-search') {
+            load(1);
+        }
+    });
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        load(1);
+    });
 
     load(1);
 })();

@@ -1,6 +1,13 @@
 <?php
 /** Customer-only. $user in scope. */
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/support.js'];
+
+render_hero_banner(
+    $user,
+    'Support',
+    "Message our support team directly. Replies appear here as soon as they're sent."
+);
 ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary">Message our support team directly. Replies appear here as soon as they're sent.</p>

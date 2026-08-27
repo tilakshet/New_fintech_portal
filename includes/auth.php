@@ -92,7 +92,7 @@ function require_auth(): array
         deny_unauthenticated();
     }
 
-    $stmt = db()->prepare('SELECT id, name, email, role, status, avatar_initials, created_at FROM users WHERE id = ?');
+   $stmt = db()->prepare('SELECT id, name, email, role, status, avatar_initials, gender, created_at FROM users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch();
 

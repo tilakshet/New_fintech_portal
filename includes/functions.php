@@ -9,6 +9,18 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function user_avatar_markup(array $user, string $iconClass = 'w-4 h-4'): string
+{
+    $gender = $user['gender'] ?? null;
+    if ($gender === 'male') {
+        return icon('avatar-male', $iconClass);
+    }
+    if ($gender === 'female') {
+        return icon('avatar-female', $iconClass);
+    }
+    return e($user['avatar_initials'] ?? substr($user['name'], 0, 2));
+}
+
 function money_format(string $amount, string $currency = 'INR'): string
 {
     $symbols = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'];
@@ -77,6 +89,55 @@ function kyc_document_types(): array
         'passport_photo' => 'Passport Size Photo',
         'service_agreement' => 'Service Agreement',
     ];
+}
+
+/**
+ * Minimal HS256 JWT encoder/decoder for platform API bearer tokens
+ * (Payment gateways → API Credentials → Generate Bearer Token). No external
+ * library needed — HS256 is just base64url(header).base64url(payload)
+ * signed with HMAC-SHA256, which PHP's hash_hmac() does natively.
+ */
+function jwt_encode(array $payload, string $secret): string
+{
+    $b64url = static fn (string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+
+    $header = $b64url(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+    $body = $b64url(json_encode($payload));
+    $signature = $b64url(hash_hmac('sha256', "{$header}.{$body}", $secret, true));
+
+    return "{$header}.{$body}.{$signature}";
+}
+
+/**
+ * Verifies signature + expiry and returns the decoded payload, or null if
+ * the token is malformed, mis-signed, or expired. Available for any
+ * endpoint that wants to accept the platform bearer token as an
+ * authentication method going forward.
+ */
+function jwt_decode_verify(string $token, string $secret): ?array
+{
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) {
+        return null;
+    }
+    [$header, $body, $signature] = $parts;
+
+    $b64url = static fn (string $data): string => rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    $expected = $b64url(hash_hmac('sha256', "{$header}.{$body}", $secret, true));
+
+    if (!hash_equals($expected, $signature)) {
+        return null;
+    }
+
+    $payload = json_decode(base64_decode(strtr($body, '-_', '+/')), true);
+    if (!is_array($payload)) {
+        return null;
+    }
+    if (isset($payload['exp']) && time() >= (int) $payload['exp']) {
+        return null;
+    }
+
+    return $payload;
 }
 
 function generate_reference(string $type): string

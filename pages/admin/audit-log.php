@@ -31,7 +31,13 @@ $actionLabels = [
     'gateway_key_rotated' => 'Rotated a gateway key',
     'gateway_deleted' => 'Removed a payment gateway',
 ];
+require_once __DIR__ . '/../../includes/banner.php';
 ?>
+<?php render_hero_banner(
+    $user,
+    'Audit log',
+    'A record of sensitive operator and account actions across Verapay.'
+); ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary">A record of sensitive operator and account actions across Verapay.</p>
 </div>

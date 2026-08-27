@@ -88,9 +88,28 @@ function render_nav_entry(array $entry, string $route, int $index = 0): void
 }
 ?>
 <aside id="app-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-fast ease-in-out bg-surface-strong flex flex-col" aria-label="Primary">
-    <div class="flex items-center gap-2.5 px-6 py-6">
-        <span class="flex items-center justify-center w-8 h-8 rounded-sm bg-brand text-white font-bold text-md" aria-hidden="true">V</span>
-        <span class="text-2xl font-bold text-text-inverse tracking-tight">Verapay</span>
+            <div class="flex items-center gap-3 mx-4 mt-4 mb-2 px-4 py-4 rounded-lg bg-[#170b2e]">
+        <span class="relative flex items-center justify-center w-11 h-11 shrink-0" aria-hidden="true">
+            <svg viewBox="0 0 40 40" class="w-11 h-11 drop-shadow-[0_4px_10px_rgba(139,63,209,0.55)]" fill="none">
+                <defs>
+                    <linearGradient id="brand-logo-grad-top" x1="5" y1="4" x2="35" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#c084fc"/>
+                        <stop offset="1" stop-color="#8b3fd1"/>
+                    </linearGradient>
+                    <linearGradient id="brand-logo-grad-mid" x1="5" y1="18" x2="35" y2="30" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#8b3fd1"/>
+                        <stop offset="1" stop-color="#4e148c"/>
+                    </linearGradient>
+                </defs>
+                <polygon points="20,22 35,14.5 35,20.5 20,28 5,20.5 5,14.5" fill="url(#brand-logo-grad-mid)" opacity="0.45"/>
+                <polygon points="20,28 35,20.5 35,26.5 20,34 5,26.5 5,20.5" fill="url(#brand-logo-grad-mid)" opacity="0.28"/>
+                <polygon points="20,4 35,12 20,20 5,12" fill="url(#brand-logo-grad-top)"/>
+            </svg>
+        </span>
+        <span class="leading-tight">
+            <span class="block text-2xl font-bold text-white tracking-tight">Verapay</span>
+                        <span class="block text-[10px] font-semibold tracking-[0.18em] text-[#d8b4fe] uppercase">Fintech Portal</span>
+        </span>
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 space-y-0.5" aria-label="Main navigation">

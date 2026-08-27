@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS merchant_profiles (
+CREATE TABLE IF NOT EXISTS merchant_profiles (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     legal_company_name VARCHAR(160) NULL,
@@ -46,3 +46,6 @@ CREATE TABLE IF NOT EXISTS kyc_documents (
     UNIQUE KEY uq_kyc_documents_user_type (user_id, document_type),
     CONSTRAINT fk_kyc_documents_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE users
+    ADD COLUMN gender ENUM('male', 'female', 'other') NULL AFTER avatar_initials;

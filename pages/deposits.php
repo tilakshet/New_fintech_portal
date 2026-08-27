@@ -1,6 +1,13 @@
 <?php
 /** Customer-only. $user in scope. */
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/deposits.js'];
+
+render_hero_banner(
+    $user,
+    'Add funds',
+    'Add money to your Verapay balance in a few seconds.'
+);
 ?>
 <div class="mb-6">
     <p class="text-md text-text-secondary">Add funds to your Verapay balance. This is an action — for your full balance overview, see <a href="/wallet" class="text-brand hover:underline font-medium">Wallet</a>.</p>

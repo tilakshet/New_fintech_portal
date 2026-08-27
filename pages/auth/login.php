@@ -53,9 +53,24 @@ if (isset($_SESSION['flash_error'])) {
                 </g>
             </svg>
 
-            <div class="relative flex items-center gap-2.5">
-                <span class="flex items-center justify-center w-9 h-9 rounded-sm bg-white/15 text-white font-bold text-lg" aria-hidden="true">V</span>
-                <span class="text-2xl font-bold text-white tracking-tight">Verapay</span>
+                        <div class="relative flex items-center gap-3">
+                <span class="relative flex items-center justify-center w-11 h-11 shrink-0" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" class="w-11 h-11 drop-shadow-[0_4px_10px_rgba(0,0,0,0.25)]" fill="none">
+                        <defs>
+                            <linearGradient id="brand-logo-grad-top-a" x1="5" y1="4" x2="35" y2="20" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" stop-color="#ffffff"/>
+                                <stop offset="1" stop-color="#e9d5ff"/>
+                            </linearGradient>
+                        </defs>
+                        <polygon points="20,22 35,14.5 35,20.5 20,28 5,20.5 5,14.5" fill="#ffffff" opacity="0.35"/>
+                        <polygon points="20,28 35,20.5 35,26.5 20,34 5,26.5 5,20.5" fill="#ffffff" opacity="0.2"/>
+                        <polygon points="20,4 35,12 20,20 5,12" fill="url(#brand-logo-grad-top-a)"/>
+                    </svg>
+                </span>
+                <span class="leading-tight">
+                    <span class="block text-2xl font-bold text-white tracking-tight">Verapay</span>
+                    <span class="block text-[10px] font-semibold tracking-[0.18em] text-[#e9d5ff] uppercase">Fintech Portal</span>
+                </span>
             </div>
 
             <div class="relative max-w-md">

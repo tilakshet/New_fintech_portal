@@ -46,3 +46,6 @@ CREATE TABLE IF NOT EXISTS kyc_documents (
     UNIQUE KEY uq_kyc_documents_user_type (user_id, document_type),
     CONSTRAINT fk_kyc_documents_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE users
+    ADD COLUMN gender ENUM('male', 'female', 'other') NULL AFTER avatar_initials;

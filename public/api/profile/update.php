@@ -11,15 +11,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $name = trim((string) ($input['name'] ?? ''));
+$gender = trim((string) ($input['gender'] ?? ''));
 
 if ($name === '' || mb_strlen($name) > 120) {
     json_response(false, null, 'Enter a name (up to 120 characters).', 422);
 }
 
+$allowedGenders = ['male', 'female', 'other'];
+if ($gender !== '' && !in_array($gender, $allowedGenders, true)) {
+    json_response(false, null, 'Select a valid gender option.', 422);
+}
+$genderValue = $gender === '' ? null : $gender;
+
 $words = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
 $initials = mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . mb_substr($words[1] ?? '', 0, 1));
 
-db()->prepare('UPDATE users SET name = ?, avatar_initials = ? WHERE id = ?')->execute([$name, $initials, $user['id']]);
+db()->prepare('UPDATE users SET name = ?, avatar_initials = ?, gender = ? WHERE id = ?')->execute([$name, $initials, $genderValue, $user['id']]);
 write_audit_log((int) $user['id'], 'profile_updated', 'user', (int) $user['id'], []);
 
-json_response(true, ['name' => $name, 'avatar_initials' => $initials], 'Profile updated.');
+json_response(true, ['name' => $name, 'avatar_initials' => $initials, 'gender' => $genderValue], 'Profile updated.');

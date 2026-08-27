@@ -36,18 +36,20 @@ if (!in_array($mimeType, $allowedMimes, true)) {
     json_response(false, null, 'Unsupported file type.', 422);
 }
 
-if (!is_dir(KYC_UPLOAD_DIR)) {
-    mkdir(KYC_UPLOAD_DIR, 0750, true);
+// Each customer gets their own subfolder (storage/kyc-uploads/{user_id}/),
+// with one file per document type inside it — e.g.
+// storage/kyc-uploads/3/aadhar_card.pdf — instead of every customer's
+// documents being dumped flat into one folder with a random suffix. A
+// re-upload of the same document type overwrites the file in place, which
+// matches the one-row-per-user-per-type semantics already enforced by the
+// kyc_documents table's unique key.
+$userDir = rtrim(KYC_UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $user['id'];
+if (!is_dir($userDir)) {
+    mkdir($userDir, 0750, true);
 }
 
 $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-$storedFilename = sprintf(
-    '%d_%s_%s%s',
-    $user['id'],
-    $type,
-    bin2hex(random_bytes(8)),
-    $extension !== '' ? '.' . $extension : ''
-);
+$storedFilename = $user['id'] . '/' . $type . ($extension !== '' ? '.' . strtolower($extension) : '');
 $destination = rtrim(KYC_UPLOAD_DIR, '/\\') . DIRECTORY_SEPARATOR . $storedFilename;
 
 if (!move_uploaded_file($file['tmp_name'], $destination)) {

@@ -49,6 +49,59 @@
             </li>`).join('');
     }
 
+    // Lazy-loaded only when a deposit actually routes through a live
+    // Razorpay-integrated gateway — most deposits (any other gateway, or
+    // one without real credentials configured) never touch this.
+    let razorpayScriptPromise = null;
+    function loadRazorpayCheckoutScript() {
+        if (razorpayScriptPromise) return razorpayScriptPromise;
+        razorpayScriptPromise = new Promise((resolve, reject) => {
+            if (window.Razorpay) { resolve(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Could not load the payment widget.'));
+            document.head.appendChild(script);
+        });
+        return razorpayScriptPromise;
+    }
+
+    async function launchRazorpayCheckout(checkout, reference) {
+        try {
+            await loadRazorpayCheckoutScript();
+        } catch (err) {
+            showToast('Could not load the payment window. Please try again.', 'error');
+            return;
+        }
+
+        const rzp = new window.Razorpay({
+            key: checkout.key_id,
+            amount: checkout.amount,
+            currency: checkout.currency,
+            order_id: checkout.order_id,
+            name: 'Verapay',
+            description: `Wallet deposit · ${reference}`,
+            handler: function () {
+                // Only an in-progress signal — the wallet is credited by the
+                // webhook once the gateway confirms, never from this callback.
+                showToast('Payment received — confirming with the gateway.', 'success');
+                loadBalance();
+                loadRecentDeposits();
+            },
+            modal: {
+                ondismiss: function () {
+                    showToast('Payment window closed. This deposit is still pending — check Transactions or try again.', 'info');
+                },
+            },
+        });
+
+        rzp.on('payment.failed', function () {
+            showToast('The gateway declined this payment. This deposit will show as failed shortly.', 'error');
+        });
+
+        rzp.open();
+    }
+
     document.getElementById('deposit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const amountError = document.getElementById('amount-error');
@@ -81,15 +134,21 @@
             return;
         }
 
+        document.getElementById('deposit-form').reset();
+        updatePreview();
+        loadRecentDeposits();
+
+        if (data.checkout && data.checkout.provider === 'razorpay') {
+            launchRazorpayCheckout(data.checkout, data.reference);
+            return;
+        }
+
         document.getElementById('deposit-success-body').textContent = data.status === 'success'
             ? `${money(data.net_amount)} was added to your available balance. Reference ${data.reference}.`
             : `${money(data.net_amount)} will be added once your transfer settles (1-2 business days). Reference ${data.reference}.`;
         openModal('deposit-success-modal');
 
-        document.getElementById('deposit-form').reset();
-        updatePreview();
         loadBalance();
-        loadRecentDeposits();
     });
 
     loadBalance();

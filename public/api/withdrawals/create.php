@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/functions.php';
 require_once __DIR__ . '/../../../includes/money.php';
+require_once __DIR__ . '/../../../includes/gateway_selector.php';
 
 $user = api_guard(['customer']);
 
@@ -41,11 +42,22 @@ try {
     $net = money_sub($amount, $fee);
     $reference = generate_reference('withdrawal');
 
+    // Capacity is reserved against the net payout amount — Verapay's fee
+    // is retained before the payout gateway ever sees the transfer, so
+    // that's the figure that actually consumes the gateway's daily limit.
+    $selection = select_and_reserve_gateway($pdo, $net);
+    if ($selection['gateway'] === null) {
+        $pdo->rollBack();
+        write_audit_log($user['id'], 'withdrawal_gateway_unavailable', 'transaction', null, ['amount' => $amount, 'net_amount' => $net, 'reason' => $selection['reason']]);
+        json_response(false, null, 'Withdrawals are temporarily unavailable. Please try again shortly.', 503);
+    }
+    $gatewayId = (int) $selection['gateway']['id'];
+
     $insert = $pdo->prepare(
-        'INSERT INTO transactions (user_id, type, method, amount, fee, net_amount, currency, status, reference, destination)
-         VALUES (?, "withdrawal", "Bank transfer", ?, ?, ?, "INR", "pending", ?, ?)'
+        'INSERT INTO transactions (user_id, type, method, amount, fee, net_amount, currency, status, reference, destination, gateway_id)
+         VALUES (?, "withdrawal", "Bank transfer", ?, ?, ?, "INR", "pending", ?, ?, ?)'
     );
-    $insert->execute([$user['id'], $amount, $fee, $net, $reference, $destination]);
+    $insert->execute([$user['id'], $amount, $fee, $net, $reference, $destination, $gatewayId]);
     $txnId = (int) $pdo->lastInsertId();
 
     // Hold the funds: move out of available into pending until settled.
@@ -62,7 +74,7 @@ try {
     json_response(false, null, 'Unable to process your withdrawal right now. Please try again.', 500);
 }
 
-write_audit_log($user['id'], 'withdrawal_created', 'transaction', $txnId, ['amount' => $amount, 'destination' => $destination]);
+write_audit_log($user['id'], 'withdrawal_created', 'transaction', $txnId, ['amount' => $amount, 'destination' => $destination, 'gateway_id' => $gatewayId]);
 
 json_response(true, [
     'reference' => $reference,

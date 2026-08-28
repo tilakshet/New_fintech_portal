@@ -218,6 +218,9 @@ render_hero_banner(
                         <th scope="col">Gateway</th>
                         <th scope="col">Provider</th>
                         <th scope="col">API key</th>
+                        <th scope="col">Priority</th>
+                        <th scope="col">Daily limit</th>
+                        <th scope="col">Webhook</th>
                         <th scope="col">Status</th>
                         <th scope="col">
                             <span class="sr-only">Actions</span>
@@ -227,7 +230,7 @@ render_hero_banner(
 
                 <tbody id="gateways-tbody">
                     <tr>
-                        <td colspan="5"
+                        <td colspan="8"
                             class="text-center py-8 text-text-secondary">
                             Loading gateways…
                         </td>
@@ -294,9 +297,27 @@ render_hero_banner(
                 </select>
             </div>
 
+            <div id="ag-public-key-field" class="hidden">
+                <label for="ag-public-key" class="field-label">
+                    Key ID
+                    <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+
+                <input type="text"
+                       id="ag-public-key"
+                       class="field-input font-mono"
+                       placeholder="rzp_live_…"
+                       autocomplete="off"
+                       spellcheck="false">
+
+                <p class="field-help">
+                    Razorpay's public Key ID, from the same API Keys screen as the secret below. Not sensitive — safe to display in full.
+                </p>
+            </div>
+
             <div>
                 <label for="ag-key" class="field-label">
-                    API key
+                    API key <span id="ag-key-label-suffix" class="text-text-secondary font-normal"></span>
                     <span class="text-danger" aria-hidden="true">*</span>
                 </label>
 
@@ -310,7 +331,7 @@ render_hero_banner(
                        spellcheck="false">
 
                 <p class="field-help">
-                    Stored as a one-way hash. Only the last 4 characters remain visible afterward.
+                    Encrypted at rest for real outbound use, plus a one-way hash for display — only the last 4 characters are ever shown again.
                 </p>
             </div>
 
@@ -359,6 +380,21 @@ render_hero_banner(
             <p id="rotate-key-target"
                class="text-md text-text-secondary"></p>
 
+            <div id="rk-public-key-field" class="hidden">
+                <label for="rk-public-key" class="field-label">New Key ID</label>
+
+                <input type="text"
+                       id="rk-public-key"
+                       class="field-input font-mono"
+                       placeholder="rzp_live_…"
+                       autocomplete="off"
+                       spellcheck="false">
+
+                <p class="field-help">
+                    Razorpay issues Key ID and secret as a pair — update both together when regenerating. Leave blank to keep the current Key ID.
+                </p>
+            </div>
+
             <div>
                 <label for="rk-key" class="field-label">
                     New API key
@@ -397,6 +433,169 @@ render_hero_banner(
     </form>
 </dialog>
 
+<!-- Edit Limits Modal -->
+<dialog id="edit-limits-modal"
+        class="rounded-md p-0 backdrop:bg-black/40 w-full max-w-md"
+        aria-labelledby="edit-limits-title">
+
+    <form id="edit-limits-form" class="flex flex-col">
+
+        <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-border">
+            <h2 id="edit-limits-title"
+                class="text-3xl font-semibold text-text-primary">
+                Priority &amp; daily limit
+            </h2>
+
+            <button type="button"
+                    class="btn-icon"
+                    data-modal-close
+                    aria-label="Close dialog">
+                <?= icon('close', 'w-5 h-5') ?>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4">
+
+            <p id="edit-limits-target" class="text-md text-text-secondary"></p>
+
+            <div>
+                <label for="el-priority" class="field-label">
+                    Priority
+                    <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+
+                <input type="number"
+                       id="el-priority"
+                       class="field-input"
+                       min="0"
+                       max="9999"
+                       step="1"
+                       required>
+
+                <p class="field-help">
+                    Lower numbers are tried first when routing a new transaction.
+                </p>
+            </div>
+
+            <div>
+                <label for="el-daily-limit" class="field-label">
+                    Daily limit (₹)
+                </label>
+
+                <input type="number"
+                       id="el-daily-limit"
+                       class="field-input"
+                       min="0"
+                       step="0.01"
+                       placeholder="Leave blank for unlimited">
+
+                <p class="field-help">
+                    Our-side cap on total amount routed through this gateway per calendar day (UTC). Resets automatically at UTC midnight.
+                </p>
+            </div>
+
+            <p id="el-error" class="field-error hidden"></p>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-border bg-surface-muted rounded-b-md">
+            <button type="button"
+                    class="btn-ghost !px-3 !py-1.5"
+                    id="el-reset-usage">
+                Reset today's usage
+            </button>
+
+            <div class="flex items-center gap-3">
+                <button type="button"
+                        class="btn-secondary"
+                        data-modal-close>
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        id="el-submit"
+                        class="btn-primary">
+                    Save
+                </button>
+            </div>
+        </div>
+    </form>
+</dialog>
+
+<!-- Configure Webhook Modal -->
+<dialog id="configure-webhook-modal"
+        class="rounded-md p-0 backdrop:bg-black/40 w-full max-w-md"
+        aria-labelledby="configure-webhook-title">
+
+    <form id="configure-webhook-form" class="flex flex-col">
+
+        <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-border">
+            <h2 id="configure-webhook-title"
+                class="text-3xl font-semibold text-text-primary">
+                Configure webhook
+            </h2>
+
+            <button type="button"
+                    class="btn-icon"
+                    data-modal-close
+                    aria-label="Close dialog">
+                <?= icon('close', 'w-5 h-5') ?>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4">
+
+            <div>
+                <label class="field-label">Receiver URL</label>
+
+                <input type="text"
+                       id="cw-url"
+                       class="field-input font-mono"
+                       readonly>
+
+                <p class="field-help">
+                    Paste this into the provider's dashboard as the webhook/callback URL for this gateway.
+                </p>
+            </div>
+
+            <div>
+                <label for="cw-secret" class="field-label">
+                    Webhook signing secret
+                    <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+
+                <input type="text"
+                       id="cw-secret"
+                       class="field-input font-mono"
+                       minlength="16"
+                       placeholder="whsec_…"
+                       required
+                       autocomplete="off"
+                       spellcheck="false">
+
+                <p class="field-help">
+                    Stored encrypted. Used only to verify this gateway's inbound webhook signatures — the previous secret stops being valid immediately once saved.
+                </p>
+            </div>
+
+            <p id="cw-error" class="field-error hidden"></p>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-surface-muted rounded-b-md">
+            <button type="button"
+                    class="btn-secondary"
+                    data-modal-close>
+                Cancel
+            </button>
+
+            <button type="submit"
+                    id="cw-submit"
+                    class="btn-primary">
+                Save secret
+            </button>
+        </div>
+    </form>
+</dialog>
+
 <?php
 
 render_modal(
@@ -405,6 +604,15 @@ render_modal(
     '<p id="delete-gateway-body">This gateway configuration will be permanently removed. This cannot be undone.</p>',
     'Remove gateway',
     'id="delete-gateway-confirm-btn"',
+    true
+);
+
+render_modal(
+    'reset-usage-modal',
+    "Reset today's usage?",
+    '<p id="reset-usage-body">This gateway\'s used amount and transaction count for today will be set back to zero, freeing up its full daily limit again.</p>',
+    'Reset usage',
+    'id="reset-usage-confirm-btn"',
     true
 );
 

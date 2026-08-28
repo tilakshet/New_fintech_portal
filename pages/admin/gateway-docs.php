@@ -38,6 +38,13 @@ $endpoints = [
         "api_key_last4": "a1B9",
         "status": "active",
         "is_default": 1,
+        "priority": 1,
+        "daily_limit_amount": "10000.00",
+        "used_today": "8500.00",
+        "transaction_count_today": 14,
+        "remaining_today": "1500.00",
+        "webhook_configured": true,
+        "webhook_url": "https://example.com/api/webhooks/gateway.php?gateway_id=1",
         "created_at": "2026-07-11 07:37:24",
         "updated_at": "2026-08-20 07:37:24"
       }
@@ -56,8 +63,9 @@ JSON,
         'request' => <<<JSON
 {
   "display_name": "Backup Processor",
-  "provider": "payu",
-  "api_key": "sk_live_your_real_key_here"
+  "provider": "razorpay",
+  "api_key": "the_key_secret_from_razorpay",
+  "public_key": "rzp_live_your_key_id"
 }
 JSON,
         'response' => <<<JSON
@@ -67,7 +75,7 @@ JSON,
   "message": "Gateway added. Activate it when you are ready to accept traffic through it."
 }
 JSON,
-        'notes' => "provider must be one of: razorpay, payu, cashfree, stripe, paypal, other. api_key must be at least 8 characters; only its hash and last 4 characters are stored.",
+        'notes' => "provider must be one of: razorpay, payu, cashfree, stripe, paypal, other. api_key must be at least 8 characters — stored both as a one-way hash (display only) and AES-256-GCM encrypted (for real outbound calls). public_key is Razorpay's Key ID — required when provider is razorpay, ignored otherwise; it's not sensitive and is returned in full by list.php.",
     ],
     [
         'slug' => 'update-status',
@@ -101,7 +109,7 @@ JSON,
         'path' => '/api/admin/gateways/rotate-key.php',
         'summary' => "Replace a gateway's stored API key. The previous key is invalidated immediately.",
         'request' => <<<JSON
-{ "id": 4, "api_key": "sk_live_the_new_key" }
+{ "id": 4, "api_key": "the_new_key_secret", "public_key": "rzp_live_the_new_key_id" }
 JSON,
         'response' => <<<JSON
 {
@@ -110,7 +118,54 @@ JSON,
   "message": "Backup Processor's key has been rotated."
 }
 JSON,
-        'notes' => 'Same 8-character minimum as create.php. There is no "view current key" endpoint by design.',
+        'notes' => 'Same 8-character minimum as create.php. public_key is optional here — omit it to keep the gateway\'s current Key ID, or send a new one (Razorpay issues Key ID + secret as a pair, so send both together when regenerating). There is no "view current key" endpoint by design.',
+    ],
+    [
+        'slug' => 'update-limits',
+        'method' => 'POST',
+        'path' => '/api/admin/gateways/update-limits.php',
+        'summary' => 'Set a gateway\'s selection priority and our-side daily capacity limit.',
+        'request' => <<<JSON
+{ "id": 4, "priority": 1, "daily_limit_amount": "10000.00" }
+JSON,
+        'response' => <<<JSON
+{
+  "success": true,
+  "data": { "priority": 1, "daily_limit_amount": "10000.00" },
+  "message": "Backup Processor's limits have been updated."
+}
+JSON,
+        'notes' => 'priority is 0-9999, lower is tried first. Send daily_limit_amount as null (or omit the value/leave blank) for no limit. The limit resets automatically at UTC midnight — usage is tracked per (gateway, calendar day), not against this gateway\'s all-time total.',
+    ],
+    [
+        'slug' => 'reset-usage',
+        'method' => 'POST',
+        'path' => '/api/admin/gateways/reset-usage.php',
+        'summary' => "Manually zero out a gateway's usage counter for today, freeing up its full daily limit again.",
+        'request' => <<<JSON
+{ "id": 4 }
+JSON,
+        'response' => <<<JSON
+{ "success": true, "data": null, "message": "Backup Processor's usage for today has been reset." }
+JSON,
+        'notes' => 'Use with care — this does not reconcile against any actual pending payments still in flight through this gateway.',
+    ],
+    [
+        'slug' => 'set-webhook-secret',
+        'method' => 'POST',
+        'path' => '/api/admin/gateways/set-webhook-secret.php',
+        'summary' => "Store this gateway's inbound webhook signing secret (encrypted) and get the receiver URL to configure at the provider.",
+        'request' => <<<JSON
+{ "id": 4, "webhook_secret": "whsec_the_value_the_provider_issued" }
+JSON,
+        'response' => <<<JSON
+{
+  "success": true,
+  "data": { "webhook_url": "https://example.com/api/webhooks/gateway.php?gateway_id=4" },
+  "message": "Backup Processor's webhook secret has been saved. Configure https://example.com/api/webhooks/gateway.php?gateway_id=4 in the provider's dashboard."
+}
+JSON,
+        'notes' => 'The signature scheme this receiver verifies against (X-Webhook-Signature: HMAC-SHA256 hex of the raw body) is a generic placeholder — confirm the real provider\'s actual header and algorithm before relying on this in production; see includes/gateway_webhooks.php.',
     ],
     [
         'slug' => 'delete',
@@ -151,7 +206,8 @@ render_hero_banner(
         <li><strong class="text-text-primary">Authentication:</strong> every endpoint requires an authenticated session with the <code class="font-mono text-sm">admin</code> role — operators and customers receive <code class="font-mono text-sm">403</code>.</li>
         <li><strong class="text-text-primary">CSRF:</strong> every <code class="font-mono text-sm">POST</code> requires an <code class="font-mono text-sm">X-CSRF-Token</code> header matching the current session's token (read from the <code class="font-mono text-sm">&lt;meta name="csrf-token"&gt;</code> tag if you're calling this from the browser console).</li>
         <li><strong class="text-text-primary">Response envelope:</strong> every response is <code class="font-mono text-sm">{ "success": bool, "data": ..., "message": "..." }</code>. Check <code class="font-mono text-sm">success</code>, not the HTTP status alone, before trusting <code class="font-mono text-sm">data</code>.</li>
-        <li><strong class="text-text-primary">Exactly one default:</strong> the platform always routes new transactions through whichever gateway has <code class="font-mono text-sm">is_default: true</code>. <code class="font-mono text-sm">set-default.php</code> is the only way to change it, and it can't point at an inactive gateway.</li>
+        <li><strong class="text-text-primary">Exactly one default:</strong> <code class="font-mono text-sm">set-default.php</code> is the only way to change which gateway is marked <code class="font-mono text-sm">is_default: true</code>, and it can't point at an inactive gateway.</li>
+        <li><strong class="text-text-primary">Selection is live, outbound calls are not:</strong> every deposit/withdrawal now picks an active gateway under its daily limit and reserves capacity against it, and the webhook receiver can resolve a pending transaction to success/failed. What's still missing is the actual outbound call that creates the payment at the provider — until that's built, deposits/withdrawals settle the same way they always did (synchronously in-app), and the webhook receiver has nothing to correlate against unless something else marks a transaction's <code class="font-mono text-sm">reference</code> at the provider first.</li>
     </ul>
 </div>
 

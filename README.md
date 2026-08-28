@@ -39,6 +39,8 @@ docker-compose.yml, docker/        Local dev convenience (MySQL + PHP containers
 
 This is the exact path to get the app running on your own machine, from nothing installed to a working login screen. No PHP or MySQL install needed — Docker runs both for you.
 
+**Already have Docker installed and the repo cloned?** Steps 3-7 below are automated — run `.\dev-up.ps1` (Windows PowerShell) or `./dev-up.sh` (Mac/Linux/Git Bash) from the project root and skip to §6. Safe to re-run; it won't overwrite an existing `.env` or clobber `GATEWAY_ENCRYPTION_KEY` if one's already set.
+
 **Step 1 — Install Docker Desktop.**
 Download it from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) and install it. Open it once and make sure it says it's running (there's a whale icon in your system tray/menu bar). Everything below is typed into a terminal — Command Prompt, PowerShell, or Git Bash on Windows; Terminal on Mac.
 

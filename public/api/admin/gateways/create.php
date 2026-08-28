@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../../../config/database.php';
 require_once __DIR__ . '/../../../../includes/auth.php';
 require_once __DIR__ . '/../../../../includes/functions.php';
+require_once __DIR__ . '/../../../../includes/gateway_secrets.php';
 
 $actor = api_guard(['admin']);
 
@@ -15,6 +16,7 @@ $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $name = trim((string) ($input['display_name'] ?? ''));
 $provider = $input['provider'] ?? '';
 $apiKey = trim((string) ($input['api_key'] ?? ''));
+$publicKey = trim((string) ($input['public_key'] ?? ''));
 
 if ($name === '' || mb_strlen($name) > 80) {
     json_response(false, null, 'Enter a name for this gateway (up to 80 characters).', 422);
@@ -25,15 +27,29 @@ if (!in_array($provider, $allowedProviders, true)) {
 if (mb_strlen($apiKey) < 8) {
     json_response(false, null, 'Enter an API key of at least 8 characters.', 422);
 }
+if ($provider === 'razorpay' && $publicKey === '') {
+    json_response(false, null, 'Razorpay also needs its Key ID (the public identifier from the same API Keys screen as the secret).', 422);
+}
+if (mb_strlen($publicKey) > 190) {
+    json_response(false, null, 'Key ID is too long.', 422);
+}
 
 $pdo = db();
 $last4 = mb_substr($apiKey, -4);
 $hash = password_hash($apiKey, PASSWORD_DEFAULT);
 
+try {
+    $encrypted = gateway_encrypt_secret($apiKey);
+} catch (Throwable $e) {
+    error_log('[gateways/create] ' . $e->getMessage());
+    json_response(false, null, 'Gateway encryption is not configured on this server. Set GATEWAY_ENCRYPTION_KEY and try again.', 500);
+}
+
 $stmt = $pdo->prepare(
-    'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, status, is_default) VALUES (?, ?, ?, ?, "inactive", 0)'
+    'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, api_key_encrypted, public_key, status, is_default)
+     VALUES (?, ?, ?, ?, ?, ?, "inactive", 0)'
 );
-$stmt->execute([$name, $provider, $last4, $hash]);
+$stmt->execute([$name, $provider, $last4, $hash, $encrypted, $publicKey ?: null]);
 $id = (int) $pdo->lastInsertId();
 
 write_audit_log((int) $actor['id'], 'gateway_created', 'payment_gateway', $id, ['provider' => $provider, 'display_name' => $name]);

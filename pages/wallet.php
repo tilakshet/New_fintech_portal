@@ -7,13 +7,19 @@ render_hero_banner($user, 'Your wallet', 'Balance, pending funds, and recent wal
 ?>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-    <div class="card">
-        <p class="text-sm font-medium text-text-secondary mb-2">Available balance</p>
+    <div class="card border-l-4 border-l-brand">
+        <div class="flex items-center gap-2.5 mb-2">
+            <span class="icon-chip-sm icon-chip-brand"><?= icon('wallet', 'w-4 h-4') ?></span>
+            <p class="text-sm font-medium text-text-secondary">Available balance</p>
+        </div>
         <p class="text-4xl font-semibold text-text-primary" id="wallet-available"><span class="skeleton inline-block h-8 w-32 rounded-sm align-middle"></span></p>
         <p class="text-sm text-text-secondary mt-1.5">Ready to withdraw or spend</p>
     </div>
-    <div class="card">
-        <p class="text-sm font-medium text-text-secondary mb-2">Pending balance</p>
+    <div class="card border-l-4 border-l-warning">
+        <div class="flex items-center gap-2.5 mb-2">
+            <span class="icon-chip-sm icon-chip-warning"><?= icon('clock', 'w-4 h-4') ?></span>
+            <p class="text-sm font-medium text-text-secondary">Pending balance</p>
+        </div>
         <p class="text-4xl font-semibold text-text-primary" id="wallet-pending"><span class="skeleton inline-block h-8 w-32 rounded-sm align-middle"></span></p>
         <p class="text-sm text-text-secondary mt-1.5">Processing, not yet available</p>
     </div>

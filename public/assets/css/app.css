@@ -262,4 +262,60 @@
   .trend-tooltip .text-text-secondary {
     color: rgb(255 255 255 / 70%);
   }
+
+  /* ---------- Icon chip ---------- */
+  .icon-chip {
+    @apply inline-flex items-center justify-center shrink-0;
+  }
+  .icon-chip-sm { @apply icon-chip w-8 h-8 rounded-full; }
+  .icon-chip-md { @apply icon-chip w-9 h-9 rounded-md; }
+  .icon-chip-lg { @apply icon-chip w-11 h-11 rounded-md; }
+  .icon-chip-brand { @apply bg-brand-muted text-brand; }
+  .icon-chip-success { @apply bg-success-bg text-success; }
+  .icon-chip-danger { @apply bg-danger-bg text-danger; }
+  .icon-chip-warning { @apply bg-warning-bg text-warning; }
+  .icon-chip-info { @apply bg-info-bg text-info; }
+  .icon-chip-neutral { @apply bg-neutral-bg text-neutral; }
+
+  /* ---------- Avatar chip ---------- */
+  .avatar-chip {
+    @apply inline-flex items-center justify-center rounded-full bg-brand-muted text-brand-emphasis font-semibold shrink-0;
+  }
+  .avatar-chip-sm { @apply avatar-chip w-8 h-8 text-sm; }
+  .avatar-chip-md { @apply avatar-chip w-9 h-9 text-sm; }
+  .avatar-chip-lg { @apply avatar-chip w-12 h-12 text-lg; }
+
+  /* ---------- Empty state ---------- */
+  .empty-state {
+    @apply flex flex-col items-center justify-center text-center px-6 py-14;
+  }
+  .empty-state-icon {
+    @apply flex items-center justify-center w-14 h-14 rounded-full bg-surface-muted text-text-secondary mb-4;
+  }
+  .empty-state-title { @apply text-md font-semibold text-text-primary mb-1; }
+  .empty-state-body { @apply text-sm text-text-secondary max-w-sm mb-5; }
+
+  /* ---------- Tabs ---------- */
+  .tab-list {
+    @apply inline-flex w-full sm:w-auto rounded-md border border-border bg-surface-raised p-1 gap-1;
+  }
+  .tab-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-md font-semibold text-text-secondary transition-colors duration-instant hover:text-text-primary;
+  }
+  .tab-btn[aria-selected="true"] {
+    @apply bg-brand text-white;
+  }
+
+  /* ---------- Progress bar ---------- */
+  .progress-track {
+    @apply w-full h-2 rounded-full bg-surface-muted overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full rounded-full bg-brand transition-all duration-fast ease-in-out;
+  }
+
+  /* ---------- Sticky date-group heading (notifications list) ---------- */
+  .list-date-heading {
+    @apply sticky top-0 z-[1] bg-surface-raised/95 backdrop-blur-sm px-5 py-2 text-xs font-semibold uppercase tracking-wide text-text-secondary border-b border-border;
+  }
 }

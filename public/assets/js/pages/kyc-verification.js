@@ -29,6 +29,15 @@
         }
     }
 
+    function updateProgress() {
+        const total = document.querySelectorAll('[data-doc-card]').length;
+        const uploaded = document.querySelectorAll('[data-doc-filename]:not(.hidden)').length;
+        const countEl = document.getElementById('kyc-progress-count');
+        const fillEl = document.getElementById('kyc-progress-fill');
+        if (countEl) countEl.textContent = uploaded;
+        if (fillEl) fillEl.style.width = `${total ? (uploaded / total) * 100 : 0}%`;
+    }
+
     async function load() {
         const { success, data, message } = await apiFetch('/api/kyc/documents.php');
         if (!success) {
@@ -36,6 +45,7 @@
             return;
         }
         Object.entries(data.documents).forEach(([type, doc]) => renderDoc(type, doc));
+        updateProgress();
     }
 
     document.querySelectorAll('[data-doc-form]').forEach((form) => {

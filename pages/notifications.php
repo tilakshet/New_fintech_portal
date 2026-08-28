@@ -8,9 +8,6 @@ render_hero_banner(
     'Account, payment, and security updates.'
 );
 ?>
-<div class="mb-6 flex items-center justify-end">
-    <button type="button" id="mark-all-read" class="btn-tertiary">Mark all as read</button>
-</div>
 <div class="mb-6 flex items-center justify-between gap-4">
     <p class="text-md text-text-secondary">Account, payment, and security updates.</p>
     <button type="button" id="mark-all-read" class="btn-tertiary">Mark all as read</button>

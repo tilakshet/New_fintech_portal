@@ -11,10 +11,23 @@
         return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
+    function avatarMarkup(id, gender, fallbackInitial) {
+        const g = (gender === 'male' || gender === 'female') ? gender : (Number(id) % 2 === 0 ? 'female' : 'male');
+        const folder = g === 'male' ? 'men' : 'women';
+        const idx = Number(id) % 100;
+        const initial = escapeHtml(fallbackInitial || '?');
+        return `<span class="avatar-chip-sm !bg-transparent relative shrink-0">
+            <img src="https://randomuser.me/api/portraits/${folder}/${idx}.jpg" alt="" class="absolute inset-0 w-full h-full rounded-full object-cover" loading="lazy" referrerpolicy="no-referrer"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="hidden absolute inset-0 rounded-full items-center justify-center bg-brand-muted text-brand-emphasis">${initial}</span>
+        </span>`;
+    }
+
     function messageBubble(m) {
         const isMine = m.sender_role === 'customer';
         return `
-            <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+            <div class="flex items-end gap-2.5 ${isMine ? 'justify-end' : 'justify-start'}">
+                ${!isMine ? avatarMarkup(m.sender_id, m.sender_gender, (m.sender_name || 'S').slice(0, 1)) : ''}
                 <div class="max-w-[80%] rounded-md px-4 py-2.5 ${isMine ? 'bg-brand text-white' : 'bg-surface-muted text-text-primary'}">
                     ${!isMine ? `<span class="block text-xs font-semibold ${isMine ? 'text-white/80' : 'text-text-secondary'} mb-0.5">${escapeHtml(m.sender_name)} · Support</span>` : ''}
                     <span class="block text-md whitespace-pre-wrap break-words">${escapeHtml(m.message)}</span>
@@ -27,7 +40,10 @@
         const list = document.getElementById('conversation-list');
         const { success, data } = await apiFetch('/api/support/conversations.php');
         if (!success || !data.conversations.length) {
-            list.innerHTML = '<li class="px-5 py-6 text-sm text-text-secondary text-center">No conversations yet.</li>';
+            list.innerHTML = `<li class="empty-state !py-10">
+                <span class="empty-state-icon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19v-3.5H4Z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
+                <p class="empty-state-body !mb-0">No conversations yet.</p>
+            </li>`;
             return;
         }
         list.innerHTML = data.conversations.map((c) => `
@@ -35,7 +51,7 @@
                 <button type="button" data-conversation-id="${c.id}" class="conversation-item w-full text-left px-5 py-4 hover:bg-surface-muted ${c.id === activeConversationId ? 'bg-brand-muted/40' : ''}">
                     <span class="flex items-center justify-between gap-2">
                         <span class="text-md font-semibold text-text-primary truncate">${escapeHtml(c.subject)}</span>
-                        ${c.unread_count > 0 ? `<span class="w-2 h-2 rounded-full bg-danger shrink-0" aria-label="${c.unread_count} unread"></span>` : ''}
+                        ${c.unread_count > 0 ? `<span class="badge-dot text-brand shrink-0" aria-label="${c.unread_count} unread"></span>` : ''}
                     </span>
                     <span class="block text-sm text-text-secondary truncate mt-0.5">${escapeHtml(c.last_message || '')}</span>
                 </button>

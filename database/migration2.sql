@@ -1,4 +1,4 @@
-﻿CREATE TABLE platform_api_settings (
+CREATE TABLE platform_api_settings (
     id TINYINT UNSIGNED PRIMARY KEY DEFAULT 1,
     client_key VARCHAR(40) NOT NULL,
     secret_key_hash VARCHAR(255) NOT NULL,

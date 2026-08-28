@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../includes/banner.php';
 $extraScripts = ['/assets/js/pages/admin-kyc-review.js'];
 
@@ -15,16 +15,19 @@ render_hero_banner(
     </a>
 </div>
 
-<div id="kyc-review-error" class="card text-center py-12 hidden">
-    <p class="text-3xl font-semibold text-text-primary mb-2">Customer not found</p>
-    <p class="text-md text-text-secondary mb-6">Open this page from the Customers list so the right customer is selected.</p>
-    <a href="/admin/users" class="btn-primary">Back to customers</a>
+<div id="kyc-review-error" class="card hidden">
+    <div class="empty-state">
+        <span class="empty-state-icon"><?= icon('alert-circle', 'w-6 h-6') ?></span>
+        <p class="empty-state-title">Customer not found</p>
+        <p class="empty-state-body">Open this page from the Customers list so the right customer is selected.</p>
+        <a href="/admin/users" class="btn-primary">Back to customers</a>
+    </div>
 </div>
 
 <div id="kyc-review-content" class="hidden">
     <div class="card mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">
-            <span id="kyc-review-avatar" class="flex items-center justify-center w-12 h-12 rounded-full bg-brand-muted text-brand-emphasis font-semibold shrink-0"></span>
+            <span id="kyc-review-avatar" class="avatar-chip-lg shrink-0"></span>
             <div class="min-w-0">
                 <p id="kyc-review-name" class="text-2xl font-semibold text-text-primary truncate"></p>
                 <p id="kyc-review-email" class="text-sm text-text-secondary truncate"></p>

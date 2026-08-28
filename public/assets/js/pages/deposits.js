@@ -32,12 +32,16 @@
         const list = document.getElementById('recent-deposits-list');
         const { success, data } = await apiFetch('/api/transactions/list.php?type=deposit&per_page=5');
         if (!success || !data.transactions.length) {
-            list.innerHTML = '<li class="text-sm text-text-secondary">No deposits yet.</li>';
+            list.innerHTML = `<li class="empty-state !py-6">
+                <span class="empty-state-icon"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 11.5 12 15l3.5-3.5"/></svg></span>
+                <p class="empty-state-body !mb-0">No deposits yet.</p>
+            </li>`;
             return;
         }
         list.innerHTML = data.transactions.map((t) => `
-            <li class="flex items-center justify-between gap-3 -mx-2 px-2 py-1 rounded-sm transition-colors duration-instant hover:bg-surface-muted">
-                <span class="min-w-0">
+            <li class="flex items-center gap-3 -mx-2 px-2 py-1 rounded-sm transition-colors duration-instant hover:bg-surface-muted">
+                <span class="icon-chip-sm icon-chip-success"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 11.5 12 15l3.5-3.5"/></svg></span>
+                <span class="min-w-0 flex-1">
                     <span class="block text-md font-medium text-text-primary truncate">${money(t.amount)}</span>
                     <span class="block text-sm text-text-secondary">${escapeHtml(t.method)} · ${new Date(t.created_at).toLocaleDateString()}</span>
                 </span>

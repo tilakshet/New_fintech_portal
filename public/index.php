@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Front controller. Document root is /public â€” everything else (config,
  * includes, pages, database) lives one level up and is include-only,

@@ -14,8 +14,11 @@ render_hero_banner(
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-    <div class="lg:col-span-2 card">
-        <h2 class="card-title mb-1">New withdrawal</h2>
+    <div class="lg:col-span-2 card border-l-4 border-l-warning">
+        <div class="flex items-center gap-2.5 mb-1">
+            <span class="icon-chip-md icon-chip-warning"><?= icon('withdrawal', 'w-4 h-4') ?></span>
+            <h2 class="card-title">New withdrawal</h2>
+        </div>
         <p class="card-subtitle mb-5">Available balance: <span id="current-balance" class="font-semibold text-text-primary">…</span></p>
 
         <form id="withdrawal-form" novalidate>
@@ -60,7 +63,7 @@ render_hero_banner(
 <dialog id="withdrawal-success-modal" class="rounded-md p-0 backdrop:bg-black/40 w-full max-w-md" aria-labelledby="withdrawal-success-title">
     <div class="flex flex-col">
         <div class="px-6 py-8 text-center">
-            <span class="mx-auto mb-4 flex items-center justify-center w-12 h-12 rounded-full bg-warning-bg text-warning"><?= icon('clock', 'w-6 h-6') ?></span>
+            <span class="icon-chip-lg icon-chip-warning !rounded-full mx-auto mb-4"><?= icon('clock', 'w-6 h-6') ?></span>
             <h2 id="withdrawal-success-title" class="text-3xl font-semibold text-text-primary mb-1.5">Withdrawal submitted</h2>
             <p id="withdrawal-success-body" class="text-md text-text-secondary"></p>
         </div>

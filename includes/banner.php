@@ -63,7 +63,7 @@ function render_hero_banner(array $user, string $eyebrow, string $blurb, array $
             </div>
             <div class="flex flex-col items-end gap-2 shrink-0">
                 <span class="flex items-center gap-2.5 rounded-full bg-white/15 pl-1.5 pr-4 py-1.5">
-                    <span class="flex items-center justify-center w-12 h-12 rounded-full bg-white/25 text-white font-semibold text-xs ring-2 ring-white/40 shrink-0" aria-hidden="true"><?= user_avatar_markup($user, 'w-7 h-7') ?></span>
+                    <span class="flex items-center justify-center w-12 h-12 rounded-full bg-white/25 text-white font-semibold text-xs ring-2 ring-white/40 shrink-0" aria-hidden="true"><?= user_avatar_markup($user) ?></span>
                     <span class="leading-tight text-left">
                         <span class="block text-[10px] font-semibold uppercase tracking-wide text-white/70">Access granted</span>
                         <span class="block text-sm font-medium text-white">ID #<?= e(str_pad((string) $user['id'], 5, '0', STR_PAD_LEFT)) ?></span>

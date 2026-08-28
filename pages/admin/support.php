@@ -24,9 +24,10 @@ render_hero_banner(
     </div>
 
     <div class="card !p-0 flex flex-col lg:col-span-2" id="thread-panel">
-        <div id="thread-empty" class="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
-            <p class="text-md font-medium text-text-primary mb-1">No conversation selected</p>
-            <p class="text-sm text-text-secondary">Choose a conversation from the inbox to reply.</p>
+        <div id="thread-empty" class="empty-state flex-1">
+            <span class="empty-state-icon"><?= icon('support', 'w-6 h-6') ?></span>
+            <p class="empty-state-title">No conversation selected</p>
+            <p class="empty-state-body">Choose a conversation from the inbox to reply.</p>
         </div>
 
         <div id="thread-active" class="hidden flex-1 flex flex-col min-h-0">

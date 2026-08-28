@@ -9,16 +9,36 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function user_avatar_markup(array $user, string $iconClass = 'w-4 h-4'): string
+/**
+ * Realistic per-user profile photo, sourced live from randomuser.me's
+ * stable portrait endpoints (/portraits/{men|women}/0-99.jpg). Every user
+ * gets one: gender-matched when it's on file, otherwise deterministically
+ * assigned from the user id so it's still stable across visits. The index
+ * is likewise derived from the id so the same user always gets the same photo.
+ */
+function user_avatar_photo_url(array $user): string
 {
     $gender = $user['gender'] ?? null;
-    if ($gender === 'male') {
-        return icon('avatar-male', $iconClass);
+    if ($gender !== 'male' && $gender !== 'female') {
+        $gender = ((int) $user['id']) % 2 === 0 ? 'female' : 'male';
     }
-    if ($gender === 'female') {
-        return icon('avatar-female', $iconClass);
-    }
-    return e($user['avatar_initials'] ?? substr($user['name'], 0, 2));
+    $folder = $gender === 'male' ? 'men' : 'women';
+    $index = ((int) $user['id']) % 100;
+    return "https://randomuser.me/api/portraits/{$folder}/{$index}.jpg";
+}
+
+/** Always sized via the caller's wrapping element (w-full h-full), so callers keep controlling avatar size there. */
+function user_avatar_markup(array $user): string
+{
+    $photoUrl = user_avatar_photo_url($user);
+    $initials = e($user['avatar_initials'] ?? substr($user['name'], 0, 2));
+
+    // onerror swaps to the initials fallback in place if the external photo fails to load.
+    return '<span class="relative block w-full h-full">'
+        . '<img src="' . e($photoUrl) . '" alt="" class="absolute inset-0 w-full h-full rounded-full object-cover" loading="lazy" referrerpolicy="no-referrer" '
+        . 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        . '<span class="hidden absolute inset-0 rounded-full items-center justify-center bg-brand-muted text-brand-emphasis font-semibold">' . $initials . '</span>'
+        . '</span>';
 }
 
 function money_format(string $amount, string $currency = 'INR'): string

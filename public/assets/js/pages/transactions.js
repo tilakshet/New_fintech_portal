@@ -16,6 +16,19 @@
         return map[status] || 'badge-neutral';
     }
 
+    function statusBorderClass(status) {
+        const map = { success: 'border-l-success', pending: 'border-l-warning', failed: 'border-l-danger', cancelled: 'border-l-neutral', refunded: 'border-l-info' };
+        return map[status] || 'border-l-neutral';
+    }
+
+    function typeIconChip(type) {
+        const tone = type === 'deposit' ? 'icon-chip-success' : 'icon-chip-warning';
+        const path = type === 'deposit'
+            ? '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 11.5 12 15l3.5-3.5"/>'
+            : '<circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 12.5 12 9l3.5 3.5"/>';
+        return `<span class="icon-chip-sm ${tone}"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg></span>`;
+    }
+
     function buildQuery(page) {
         const params = new URLSearchParams(new FormData(form));
         [...params.keys()].forEach((k) => { if (!params.get(k)) params.delete(k); });
@@ -30,10 +43,13 @@
         const { success, data, message } = await apiFetch('/api/transactions/list.php?' + buildQuery(page));
 
         if (!success) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-10">
-                <p class="text-md text-text-primary font-medium mb-1">We couldn't load transactions.</p>
-                <p class="text-sm text-text-secondary mb-4">${escapeHtml(message || 'Please try again.')}</p>
-                <button class="btn-secondary" id="txn-retry">Try again</button>
+            tbody.innerHTML = `<tr><td colspan="${colCount}">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.9" fill="currentColor" stroke="none"/></svg></span>
+                    <p class="empty-state-title">We couldn't load transactions.</p>
+                    <p class="empty-state-body">${escapeHtml(message || 'Please try again.')}</p>
+                    <button class="btn-secondary" id="txn-retry">Try again</button>
+                </div>
             </td></tr>`;
             document.getElementById('txn-retry')?.addEventListener('click', () => load(page));
             pagination.innerHTML = '';
@@ -41,21 +57,29 @@
         }
 
         if (!data.transactions.length) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-10">
-                <p class="text-md text-text-primary font-medium mb-1">No transactions found</p>
-                <p class="text-sm text-text-secondary">Try adjusting your filters or search terms.</p>
+            tbody.innerHTML = `<tr><td colspan="${colCount}">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg></span>
+                    <p class="empty-state-title">No transactions found</p>
+                    <p class="empty-state-body">Try adjusting your filters or search terms.</p>
+                </div>
             </td></tr>`;
             pagination.innerHTML = '';
             return;
         }
 
         tbody.innerHTML = data.transactions.map((t) => `
-            <tr>
+            <tr class="border-l-4 ${statusBorderClass(t.status)}">
                 ${isOperator ? `<td>
                     <span class="block text-md text-text-primary">${escapeHtml(t.user_name)}</span>
                     <span class="block text-sm text-text-secondary">${escapeHtml(t.user_email)}</span>
                 </td>` : ''}
-                <td class="font-mono text-sm">${escapeHtml(t.reference)}</td>
+                <td>
+                    <span class="inline-flex items-center gap-2.5">
+                        ${typeIconChip(t.type)}
+                        <span class="font-mono text-sm">${escapeHtml(t.reference)}</span>
+                    </span>
+                </td>
                 <td class="capitalize">${escapeHtml(t.type)}</td>
                 <td>${escapeHtml(t.method)}</td>
                 <td>${money(t.amount)}</td>

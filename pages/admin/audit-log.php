@@ -31,6 +31,19 @@ $actionLabels = [
     'gateway_key_rotated' => 'Rotated a gateway key',
     'gateway_deleted' => 'Removed a payment gateway',
 ];
+$actionTone = [
+    'login' => 'text-info',
+    'logout' => 'text-info',
+    'deposit_created' => 'text-success',
+    'withdrawal_created' => 'text-warning',
+    'user_suspended' => 'text-danger',
+    'user_reactivated' => 'text-success',
+    'gateway_created' => 'text-neutral',
+    'gateway_status_changed' => 'text-neutral',
+    'gateway_set_default' => 'text-neutral',
+    'gateway_key_rotated' => 'text-neutral',
+    'gateway_deleted' => 'text-neutral',
+];
 require_once __DIR__ . '/../../includes/banner.php';
 ?>
 <?php render_hero_banner(
@@ -56,12 +69,23 @@ require_once __DIR__ . '/../../includes/banner.php';
             </thead>
             <tbody>
                 <?php if (!$logs): ?>
-                    <tr><td colspan="5" class="text-center py-10 text-text-secondary">No audit events recorded yet.</td></tr>
+                    <tr><td colspan="5">
+                        <div class="empty-state">
+                            <span class="empty-state-icon"><?= icon('inbox', 'w-6 h-6') ?></span>
+                            <p class="empty-state-title">No audit events recorded yet</p>
+                            <p class="empty-state-body">Sensitive operator and account actions will show up here as they happen.</p>
+                        </div>
+                    </td></tr>
                 <?php endif; ?>
                 <?php foreach ($logs as $log): ?>
                     <tr>
                         <td><?= e($log['actor_name'] ?? 'System') ?></td>
-                        <td><?= e($actionLabels[$log['action']] ?? $log['action']) ?></td>
+                        <td>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="badge-dot <?= e($actionTone[$log['action']] ?? 'text-neutral') ?>" aria-hidden="true"></span>
+                                <?= e($actionLabels[$log['action']] ?? $log['action']) ?>
+                            </span>
+                        </td>
                         <td class="text-text-secondary"><?= e($log['target_type']) ?> #<?= e((string) $log['target_id']) ?></td>
                         <td class="font-mono text-sm text-text-secondary"><?= e($log['ip_address'] ?? '—') ?></td>
                         <td class="text-text-secondary whitespace-nowrap"><?= e(date('M j, Y g:ia', strtotime($log['created_at']))) ?></td>

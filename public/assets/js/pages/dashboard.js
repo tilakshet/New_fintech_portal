@@ -11,6 +11,19 @@
         return map[status] || 'badge-neutral';
     }
 
+    function statusBorderClass(status) {
+        const map = { success: 'border-l-success', pending: 'border-l-warning', failed: 'border-l-danger', cancelled: 'border-l-neutral', refunded: 'border-l-info' };
+        return map[status] || 'border-l-neutral';
+    }
+
+    function typeIconChip(type) {
+        const tone = type === 'deposit' ? 'icon-chip-success' : 'icon-chip-warning';
+        const path = type === 'deposit'
+            ? '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 11.5 12 15l3.5-3.5"/>'
+            : '<circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 12.5 12 9l3.5 3.5"/>';
+        return `<span class="icon-chip-sm ${tone}"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg></span>`;
+    }
+
     function fillReportGrid(prefix, report) {
         ['total', 'success', 'pending', 'failed'].forEach((key) => {
             const entry = report[key];
@@ -72,15 +85,24 @@
         // Recent activity
         const tbody = document.getElementById('recent-tbody');
         if (!data.recent.length) {
-            tbody.innerHTML = `<tr><td colspan="${isOperator ? 6 : 5}" class="text-center py-8 text-text-secondary">
-                No transactions yet. ${isOperator ? '' : '<a href="/deposits" class="text-brand hover:underline">Make a deposit</a> to get started.'}
+            tbody.innerHTML = `<tr><td colspan="${isOperator ? 6 : 5}">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 3h4l2-3h4"/><path d="M5.5 5h13L21 12v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18v-6Z"/></svg></span>
+                    <p class="empty-state-title">No transactions yet</p>
+                    ${isOperator ? '' : '<p class="empty-state-body">Add funds to your wallet to see activity here.</p><a href="/deposits" class="btn-primary">Make a deposit</a>'}
+                </div>
             </td></tr>`;
             return;
         }
         tbody.innerHTML = data.recent.map((t) => `
-            <tr>
+            <tr class="border-l-4 ${statusBorderClass(t.status)}">
                 ${isOperator ? `<td>${escapeHtml(t.user_name)}</td>` : ''}
-                <td class="font-mono text-sm">${escapeHtml(t.reference)}</td>
+                <td>
+                    <span class="inline-flex items-center gap-2.5">
+                        ${typeIconChip(t.type)}
+                        <span class="font-mono text-sm">${escapeHtml(t.reference)}</span>
+                    </span>
+                </td>
                 <td class="capitalize">${escapeHtml(t.type)}</td>
                 <td>${money(t.amount, t.currency)}</td>
                 <td><span class="${statusBadgeClass(t.status)}">${escapeHtml(t.status)}</span></td>

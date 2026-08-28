@@ -15,7 +15,7 @@ $pdo = db();
 // TRUNCATE is DDL and implicitly commits any open transaction in MySQL,
 // so this cleanup runs outside the transaction used for the inserts below.
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'transactions', 'wallets', 'business_profiles', 'login_attempts', 'payment_gateways', 'users'] as $table) {
+foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'gateway_daily_usage', 'webhook_events', 'transactions', 'wallets', 'business_profiles', 'login_attempts', 'payment_gateways', 'users'] as $table) {
     $pdo->exec("TRUNCATE TABLE {$table}");
 }
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
@@ -88,15 +88,18 @@ try {
     $insertMessage->execute([$conversationId, $userIds['operator@verapay.test'], 'operator', "Thanks for flagging this, Priya. I'm checking with our processor now and will update you shortly.", (clone $now)->modify('-1 days')->format('Y-m-d H:i:s'), (clone $now)->modify('-1 days +2 hours')->format('Y-m-d H:i:s')]);
 
     $insertGateway = $pdo->prepare(
-        'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, status, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, status, is_default, priority, daily_limit_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
+    // Priority + daily_limit_amount mirror the worked example from the
+    // gateway rotation spec, so a fresh seed can exercise selection,
+    // limit-skipping and rotation immediately without any manual admin setup.
     $demoGateways = [
-        ['Primary Processor', 'razorpay', 'a1B9', 'active', 1, '-40 days'],
-        ['Backup Processor', 'payu', 'x02F', 'active', 0, '-12 days'],
-        ['Card Network Direct', 'stripe', 'k77Q', 'inactive', 0, '-3 days'],
+        ['Primary Processor', 'razorpay', 'a1B9', 'active', 1, 1, '10000.00', '-40 days'],
+        ['Backup Processor', 'payu', 'x02F', 'active', 0, 2, '20000.00', '-12 days'],
+        ['Card Network Direct', 'stripe', 'k77Q', 'inactive', 0, 3, '50000.00', '-3 days'],
     ];
-    foreach ($demoGateways as [$name, $provider, $last4, $status, $isDefault, $daysOffset]) {
-        $insertGateway->execute([$name, $provider, $last4, password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT), $status, $isDefault, (clone $now)->modify($daysOffset)->format('Y-m-d H:i:s')]);
+    foreach ($demoGateways as [$name, $provider, $last4, $status, $isDefault, $priority, $dailyLimit, $daysOffset]) {
+        $insertGateway->execute([$name, $provider, $last4, password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT), $status, $isDefault, $priority, $dailyLimit, (clone $now)->modify($daysOffset)->format('Y-m-d H:i:s')]);
     }
 
     // Obviously-fictional placeholder KYC data (repeated/sequential digits,

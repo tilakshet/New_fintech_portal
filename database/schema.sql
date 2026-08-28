@@ -71,12 +71,18 @@ CREATE TABLE transactions (
     status ENUM('pending', 'success', 'failed', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
     reference VARCHAR(40) NOT NULL,
     destination VARCHAR(190) NULL,
+    gateway_id INT UNSIGNED NULL,
+    gateway_txn_id VARCHAR(120) NULL,
+    idempotency_key VARCHAR(64) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_transactions_reference (reference),
+    UNIQUE KEY uq_transactions_idempotency_key (idempotency_key),
+    UNIQUE KEY uq_transactions_gateway_txn (gateway_id, gateway_txn_id),
     KEY idx_transactions_user (user_id, created_at),
     KEY idx_transactions_type_status (type, status),
-    CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_transactions_gateway FOREIGN KEY (gateway_id) REFERENCES payment_gateways(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE support_conversations (
@@ -122,10 +128,49 @@ CREATE TABLE payment_gateways (
     provider VARCHAR(40) NOT NULL,
     api_key_last4 CHAR(4) NOT NULL,
     api_key_hash VARCHAR(255) NOT NULL,
+    api_key_encrypted TEXT NULL,
+    webhook_secret_encrypted TEXT NULL,
+    public_key VARCHAR(190) NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'inactive',
     is_default TINYINT(1) NOT NULL DEFAULT 0,
+    priority INT UNSIGNED NOT NULL DEFAULT 100,
+    daily_limit_amount DECIMAL(18,2) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_payment_gateways_priority (status, priority)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Per-gateway, per-day usage counter. One row per (gateway, day), created
+-- lazily and locked with SELECT ... FOR UPDATE at selection time so
+-- concurrent requests reserving capacity against the same gateway on the
+-- same day serialize instead of both reading a stale "remaining" value.
+CREATE TABLE gateway_daily_usage (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gateway_id INT UNSIGNED NOT NULL,
+    usage_date DATE NOT NULL,
+    used_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+    transaction_count INT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_gateway_daily_usage (gateway_id, usage_date),
+    CONSTRAINT fk_gateway_daily_usage_gateway FOREIGN KEY (gateway_id) REFERENCES payment_gateways(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Raw inbound gateway webhook deliveries. gateway_id + event_id is the
+-- idempotency key: a re-delivered webhook for an event already recorded
+-- here is a no-op instead of crediting the wallet a second time.
+CREATE TABLE webhook_events (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gateway_id INT UNSIGNED NOT NULL,
+    event_id VARCHAR(120) NOT NULL,
+    gateway_txn_id VARCHAR(120) NULL,
+    payload JSON NOT NULL,
+    signature_valid TINYINT(1) NOT NULL DEFAULT 0,
+    status ENUM('received', 'processed', 'ignored', 'failed') NOT NULL DEFAULT 'received',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed_at DATETIME NULL,
+    UNIQUE KEY uq_webhook_events_gateway_event (gateway_id, event_id),
+    KEY idx_webhook_events_gateway_txn (gateway_txn_id),
+    CONSTRAINT fk_webhook_events_gateway FOREIGN KEY (gateway_id) REFERENCES payment_gateways(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE audit_logs (
@@ -140,4 +185,75 @@ CREATE TABLE audit_logs (
     KEY idx_audit_actor (actor_id, created_at),
     KEY idx_audit_target (target_type, target_id),
     CONSTRAINT fk_audit_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE merchant_profiles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    legal_company_name VARCHAR(160) NULL,
+    company_type VARCHAR(60) NULL,
+    mobile_number VARCHAR(20) NULL,
+    whatsapp_number VARCHAR(20) NULL,
+    pan_number VARCHAR(20) NULL,
+    gstin VARCHAR(20) NULL,
+    aadhar_number VARCHAR(20) NULL,
+    office_address VARCHAR(255) NULL,
+    kyc_locked TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_merchant_profiles_user (user_id),
+    CONSTRAINT fk_merchant_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE settlement_banks (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    account_holder VARCHAR(120) NOT NULL,
+    account_number VARCHAR(40) NOT NULL,
+    ifsc_code VARCHAR(20) NOT NULL,
+    bank_name VARCHAR(120) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_settlement_banks_user (user_id),
+    CONSTRAINT fk_settlement_banks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE kyc_documents (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    document_type ENUM(
+        'aadhar_card', 'pan_card', 'gst_certificate', 'board_resolution',
+        'certificate_of_incorporation', 'passport_photo', 'service_agreement'
+    ) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    stored_filename VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_size INT UNSIGNED NOT NULL,
+    status ENUM('pending', 'verified', 'rejected') NOT NULL DEFAULT 'pending',
+    uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_kyc_documents_user (user_id),
+    UNIQUE KEY uq_kyc_documents_user_type (user_id, document_type),
+    CONSTRAINT fk_kyc_documents_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE platform_api_settings (
+    id TINYINT UNSIGNED PRIMARY KEY DEFAULT 1,
+    client_key VARCHAR(40) NOT NULL,
+    secret_key_hash VARCHAR(255) NOT NULL,
+    secret_key_last4 VARCHAR(4) NOT NULL,
+    bearer_token TEXT NULL,
+    bearer_token_generated_at DATETIME NULL,
+    primary_whitelist_ip VARCHAR(45) NULL,
+    payout_callback_url VARCHAR(255) NULL,
+    payin_callback_url VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT chk_platform_api_settings_singleton CHECK (id = 1)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE platform_whitelisted_ips (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_platform_whitelisted_ips_ip (ip_address)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

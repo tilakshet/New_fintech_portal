@@ -75,7 +75,7 @@ JSON,
   "message": "Gateway added. Activate it when you are ready to accept traffic through it."
 }
 JSON,
-        'notes' => "provider must be one of: razorpay, payu, cashfree, stripe, paypal, other. api_key must be at least 8 characters — stored both as a one-way hash (display only) and AES-256-GCM encrypted (for real outbound calls). public_key is Razorpay's Key ID — required when provider is razorpay, ignored otherwise; it's not sensitive and is returned in full by list.php.",
+        'notes' => "provider must be one of: razorpay, payu, cashfree, stripe, paypal, other. api_key must be at least 8 characters — stored both as a one-way hash (display only) and AES-256-GCM encrypted (for real outbound calls). public_key is required when provider is razorpay (Key ID) or cashfree (Client ID), ignored otherwise — not sensitive, returned in full by list.php. sandbox_mode (bool, default true) picks which base URL Cashfree calls; Razorpay ignores it since it uses one endpoint for both modes.",
     ],
     [
         'slug' => 'update-status',

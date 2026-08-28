@@ -10,10 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(false, null, 'Method not allowed.', 405);
 }
 
+// Providers whose live integration needs a public-safe identifier
+// alongside the secret (Razorpay's Key ID, Cashfree's Client ID).
+$providersNeedingPublicKey = ['razorpay' => 'Key ID', 'cashfree' => 'Client ID'];
+
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $id = (int) ($input['id'] ?? 0);
 $apiKey = trim((string) ($input['api_key'] ?? ''));
 $publicKey = trim((string) ($input['public_key'] ?? ''));
+$sandboxModeProvided = array_key_exists('sandbox_mode', $input);
+$sandboxMode = $sandboxModeProvided && (bool) $input['sandbox_mode'];
 
 if ($id <= 0) {
     json_response(false, null, 'A gateway is required.', 422);
@@ -22,7 +28,7 @@ if (mb_strlen($apiKey) < 8) {
     json_response(false, null, 'Enter an API key of at least 8 characters.', 422);
 }
 if (mb_strlen($publicKey) > 190) {
-    json_response(false, null, 'Key ID is too long.', 422);
+    json_response(false, null, 'The public identifier is too long.', 422);
 }
 
 $pdo = db();
@@ -33,10 +39,11 @@ $gateway = $stmt->fetch();
 if (!$gateway) {
     json_response(false, null, 'Gateway not found.', 404);
 }
-// Razorpay's key_id and key_secret are issued as a pair — rotating one
-// without the other would leave the two mismatched.
-if ($gateway['provider'] === 'razorpay' && $publicKey === '' && !$gateway['public_key']) {
-    json_response(false, null, 'Razorpay also needs its Key ID (the public identifier from the same API Keys screen as the secret).', 422);
+// Providers that need one issue it and the secret as a pair — rotating
+// one without the other would leave the two mismatched.
+if (isset($providersNeedingPublicKey[$gateway['provider']]) && $publicKey === '' && !$gateway['public_key']) {
+    $label = $providersNeedingPublicKey[$gateway['provider']];
+    json_response(false, null, "This provider also needs its {$label} (the public identifier from the same API Keys screen as the secret).", 422);
 }
 
 $last4 = mb_substr($apiKey, -4);
@@ -49,8 +56,13 @@ try {
     json_response(false, null, 'Gateway encryption is not configured on this server. Set GATEWAY_ENCRYPTION_KEY and try again.', 500);
 }
 
-$pdo->prepare('UPDATE payment_gateways SET api_key_last4 = ?, api_key_hash = ?, api_key_encrypted = ?, public_key = COALESCE(NULLIF(?, ""), public_key) WHERE id = ?')
-    ->execute([$last4, $hash, $encrypted, $publicKey, $id]);
+$pdo->prepare(
+    'UPDATE payment_gateways
+     SET api_key_last4 = ?, api_key_hash = ?, api_key_encrypted = ?,
+         public_key = COALESCE(NULLIF(?, ""), public_key),
+         sandbox_mode = CASE WHEN ? THEN ? ELSE sandbox_mode END
+     WHERE id = ?'
+)->execute([$last4, $hash, $encrypted, $publicKey, $sandboxModeProvided ? 1 : 0, $sandboxMode ? 1 : 0, $id]);
 
 write_audit_log((int) $actor['id'], 'gateway_key_rotated', 'payment_gateway', $id, []);
 

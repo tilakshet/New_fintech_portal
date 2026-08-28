@@ -3,13 +3,18 @@ require_once __DIR__ . '/../../../../config/database.php';
 require_once __DIR__ . '/../../../../includes/auth.php';
 require_once __DIR__ . '/../../../../includes/functions.php';
 require_once __DIR__ . '/../../../../includes/gateway_selector.php';
+require_once __DIR__ . '/../../../../includes/gateway_providers/dispatch.php';
 
 $user = require_auth();
 require_role($user, 'admin');
 
+// Providers with an actual receiver at /api/webhooks/{provider}.php - any
+// other provider falls back to the generic /api/webhooks/gateway.php.
+$providerWebhookPaths = ['razorpay' => 'razorpay.php', 'cashfree' => 'cashfree.php'];
+
 $pdo = db();
 $stmt = $pdo->query(
-    'SELECT id, display_name, provider, api_key_last4, public_key, status, is_default, priority, daily_limit_amount,
+    'SELECT id, display_name, provider, api_key_last4, public_key, sandbox_mode, status, is_default, priority, daily_limit_amount,
             (webhook_secret_encrypted IS NOT NULL) AS webhook_configured,
             (api_key_encrypted IS NOT NULL) AS has_live_secret, created_at, updated_at
      FROM payment_gateways ORDER BY is_default DESC, priority ASC, created_at ASC'
@@ -24,10 +29,17 @@ foreach ($gateways as &$gateway) {
         ? null
         : money_sub($gateway['daily_limit_amount'], $usage['used_amount']);
     $gateway['webhook_configured'] = (bool) $gateway['webhook_configured'];
-    $gateway['live_integration'] = $gateway['provider'] === 'razorpay' && (bool) $gateway['has_live_secret'] && $gateway['public_key'];
-    $webhookPath = $gateway['provider'] === 'razorpay' ? 'razorpay.php' : 'gateway.php';
-    $gateway['webhook_url'] = APP_URL . "/api/webhooks/{$webhookPath}?gateway_id={$gateway['id']}";
+    $gateway['sandbox_mode'] = (bool) $gateway['sandbox_mode'];
+    // gateway_supports_live_order_creation() checks a real api_key_encrypted
+    // value, which is never exposed via this API — a truthy placeholder
+    // standing in for "a secret exists" satisfies that check without
+    // leaking the actual encrypted blob in the response.
+    $gateway['live_integration'] = gateway_supports_live_order_creation(
+        ['provider' => $gateway['provider'], 'public_key' => $gateway['public_key'], 'api_key_encrypted' => $gateway['has_live_secret'] ? '1' : null]
+    );
     unset($gateway['has_live_secret']);
+    $webhookPath = $providerWebhookPaths[$gateway['provider']] ?? 'gateway.php';
+    $gateway['webhook_url'] = APP_URL . "/api/webhooks/{$webhookPath}?gateway_id={$gateway['id']}";
 }
 unset($gateway);
 

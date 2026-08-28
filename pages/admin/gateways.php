@@ -299,7 +299,7 @@ render_hero_banner(
 
             <div id="ag-public-key-field" class="hidden">
                 <label for="ag-public-key" class="field-label">
-                    Key ID
+                    <span id="ag-public-key-label">Key ID</span>
                     <span class="text-danger" aria-hidden="true">*</span>
                 </label>
 
@@ -311,7 +311,17 @@ render_hero_banner(
                        spellcheck="false">
 
                 <p class="field-help">
-                    Razorpay's public Key ID, from the same API Keys screen as the secret below. Not sensitive — safe to display in full.
+                    The public identifier from the same API keys screen as the secret below (Razorpay: Key ID · Cashfree: Client ID). Not sensitive — safe to display in full.
+                </p>
+            </div>
+
+            <div id="ag-sandbox-field" class="hidden">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="ag-sandbox-mode" class="rounded" checked>
+                    <span class="text-md text-text-primary">Sandbox / test mode</span>
+                </label>
+                <p class="field-help">
+                    Uncheck only once you have real live-mode credentials — some providers (Cashfree) use a completely separate API endpoint for production.
                 </p>
             </div>
 
@@ -381,7 +391,7 @@ render_hero_banner(
                class="text-md text-text-secondary"></p>
 
             <div id="rk-public-key-field" class="hidden">
-                <label for="rk-public-key" class="field-label">New Key ID</label>
+                <label for="rk-public-key" class="field-label"><span id="rk-public-key-label">New Key ID</span></label>
 
                 <input type="text"
                        id="rk-public-key"
@@ -391,7 +401,17 @@ render_hero_banner(
                        spellcheck="false">
 
                 <p class="field-help">
-                    Razorpay issues Key ID and secret as a pair — update both together when regenerating. Leave blank to keep the current Key ID.
+                    This provider issues its public identifier and secret as a pair — update both together when regenerating. Leave blank to keep the current one.
+                </p>
+            </div>
+
+            <div id="rk-sandbox-field" class="hidden">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="rk-sandbox-mode" class="rounded">
+                    <span class="text-md text-text-primary">Sandbox / test mode</span>
+                </label>
+                <p class="field-help">
+                    Only change this if you're switching this gateway between test and live credentials.
                 </p>
             </div>
 

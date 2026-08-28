@@ -72,14 +72,30 @@
     let pendingDeleteId = null;
     let pendingResetId = null;
 
+    // Providers with a real live-order-creation adapter, and the label
+    // their public identifier goes by - keep in sync with
+    // includes/gateway_providers/dispatch.php's supported provider list.
+    const livePublicKeyLabels = {
+        razorpay: 'Key ID',
+        cashfree: 'Client ID'
+    };
+    // Providers that split their API across separate sandbox/production
+    // base URLs, so the sandbox toggle is meaningful for them.
+    const sandboxAwareProviders = ['cashfree'];
+
     const agProviderSelect = document.getElementById('ag-provider');
     const agPublicKeyField = document.getElementById('ag-public-key-field');
+    const agPublicKeyLabel = document.getElementById('ag-public-key-label');
     const agPublicKeyInput = document.getElementById('ag-public-key');
+    const agSandboxField = document.getElementById('ag-sandbox-field');
 
     function syncPublicKeyRequirement() {
-        const isRazorpay = agProviderSelect.value === 'razorpay';
-        agPublicKeyField.classList.toggle('hidden', !isRazorpay);
-        agPublicKeyInput.required = isRazorpay;
+        const provider = agProviderSelect.value;
+        const needsPublicKey = provider in livePublicKeyLabels;
+        agPublicKeyField.classList.toggle('hidden', !needsPublicKey);
+        agPublicKeyInput.required = needsPublicKey;
+        agPublicKeyLabel.textContent = livePublicKeyLabels[provider] || 'Key ID';
+        agSandboxField.classList.toggle('hidden', !sandboxAwareProviders.includes(provider));
     }
     agProviderSelect.addEventListener('change', syncPublicKeyRequirement);
     syncPublicKeyRequirement();
@@ -172,6 +188,9 @@
 
                 <td>
                     ${escapeHtml(providerNames[g.provider] || g.provider)}
+                    ${g.live_integration
+                        ? `<span class="block text-xs text-text-secondary mt-0.5">${g.sandbox_mode ? 'Sandbox' : 'Live'}</span>`
+                        : ''}
                 </td>
 
                 <td class="font-mono text-sm">
@@ -264,7 +283,8 @@
                                 class="btn-ghost !px-3 !py-1.5 rotate-btn"
                                 data-id="${g.id}"
                                 data-name="${escapeHtml(g.display_name)}"
-                                data-provider="${g.provider}">
+                                data-provider="${g.provider}"
+                                data-sandbox-mode="${g.sandbox_mode}">
                             Rotate key
                         </button>
 
@@ -351,6 +371,8 @@
 
         tbody.querySelectorAll('.rotate-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
+                const provider = btn.dataset.provider;
+
                 document.getElementById('rotate-key-form').dataset.id =
                     btn.dataset.id;
 
@@ -360,7 +382,14 @@
                 document.getElementById('rk-key').value = '';
                 document.getElementById('rk-public-key').value = '';
                 document.getElementById('rk-public-key-field')
-                    .classList.toggle('hidden', btn.dataset.provider !== 'razorpay');
+                    .classList.toggle('hidden', !(provider in livePublicKeyLabels));
+                document.getElementById('rk-public-key-label').textContent =
+                    `New ${livePublicKeyLabels[provider] || 'Key ID'}`;
+
+                document.getElementById('rk-sandbox-field')
+                    .classList.toggle('hidden', !sandboxAwareProviders.includes(provider));
+                document.getElementById('rk-sandbox-mode').checked =
+                    btn.dataset.sandboxMode === '1' || btn.dataset.sandboxMode === 'true';
 
                 openModal('rotate-key-modal');
             });
@@ -444,7 +473,11 @@
                         public_key: document
                             .getElementById('ag-public-key')
                             .value
-                            .trim()
+                            .trim(),
+
+                        sandbox_mode: document
+                            .getElementById('ag-sandbox-mode')
+                            .checked
                     }
                 }
             );
@@ -500,7 +533,11 @@
                         public_key: document
                             .getElementById('rk-public-key')
                             .value
-                            .trim()
+                            .trim(),
+
+                        sandbox_mode: document
+                            .getElementById('rk-sandbox-mode')
+                            .checked
                     }
                 }
             );

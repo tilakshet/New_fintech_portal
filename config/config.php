@@ -29,6 +29,12 @@ define('KYC_UPLOAD_ALLOWED_MIME', ['application/pdf', 'image/jpeg', 'image/png']
 // regenerations — rotating this invalidates every previously-issued token.
 define('PLATFORM_JWT_SECRET', env('PLATFORM_JWT_SECRET', 'dev-only-insecure-secret-change-in-env'));
 
+// AES-256 key (base64-encoded, 32 raw bytes) used to encrypt/decrypt real
+// payment gateway API secrets — see includes/gateway_secrets.php. Rotating
+// this makes every previously-stored gateway secret undecryptable, so back
+// up and re-encrypt existing gateways before changing it in production.
+define('GATEWAY_ENCRYPTION_KEY', env('GATEWAY_ENCRYPTION_KEY', null));
+
 error_reporting(E_ALL);
 ini_set('display_errors', APP_DEBUG ? '1' : '0');
 ini_set('log_errors', '1');

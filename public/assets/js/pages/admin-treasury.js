@@ -16,6 +16,19 @@
         return map[status] || 'badge-neutral';
     }
 
+    function statusBorderClass(status) {
+        const map = { success: 'border-l-success', pending: 'border-l-warning', failed: 'border-l-danger', cancelled: 'border-l-neutral', refunded: 'border-l-info' };
+        return map[status] || 'border-l-neutral';
+    }
+
+    function typeIconChip(type) {
+        const tone = type === 'deposit' ? 'icon-chip-success' : 'icon-chip-warning';
+        const path = type === 'deposit'
+            ? '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 11.5 12 15l3.5-3.5"/>'
+            : '<circle cx="12" cy="12" r="9"/><path d="M12 16V8M8.5 12.5 12 9l3.5 3.5"/>';
+        return `<span class="icon-chip-sm ${tone}"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg></span>`;
+    }
+
     function buildParams(page) {
         const params = new URLSearchParams(new FormData(form));
         [...params.keys()].forEach((k) => { if (!params.get(k)) params.delete(k); });
@@ -37,10 +50,13 @@
         const { success, data, message } = await apiFetch('/api/admin/treasury/list.php?' + buildParams(page).toString());
 
         if (!success) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-10">
-                <p class="text-md text-text-primary font-medium mb-1">We couldn't load the ledger.</p>
-                <p class="text-sm text-text-secondary mb-4">${escapeHtml(message || 'Please try again.')}</p>
-                <button class="btn-secondary" id="treasury-retry">Try again</button>
+            tbody.innerHTML = `<tr><td colspan="${colCount}">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.9" fill="currentColor" stroke="none"/></svg></span>
+                    <p class="empty-state-title">We couldn't load the ledger.</p>
+                    <p class="empty-state-body">${escapeHtml(message || 'Please try again.')}</p>
+                    <button class="btn-secondary" id="treasury-retry">Try again</button>
+                </div>
             </td></tr>`;
             document.getElementById('treasury-retry')?.addEventListener('click', () => load(page));
             pagination.innerHTML = '';
@@ -48,22 +64,30 @@
         }
 
         if (!data.entries.length) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-10">
-                <p class="text-md text-text-primary font-medium mb-1">No data available in table</p>
-                <p class="text-sm text-text-secondary">Try adjusting your filters or search terms.</p>
+            tbody.innerHTML = `<tr><td colspan="${colCount}">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 3h4l2-3h4"/><path d="M5.5 5h13L21 12v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18v-6Z"/></svg></span>
+                    <p class="empty-state-title">No ledger entries found</p>
+                    <p class="empty-state-body">Try adjusting your filters or search terms.</p>
+                </div>
             </td></tr>`;
             pagination.innerHTML = '';
             return;
         }
 
         tbody.innerHTML = data.entries.map((row) => `
-            <tr>
+            <tr class="border-l-4 ${statusBorderClass(row.status)}">
                 <td class="text-text-secondary whitespace-nowrap">${new Date(row.created_at).toLocaleString()}</td>
                 <td>
                     <span class="block text-md text-text-primary">${escapeHtml(row.merchant_name)}</span>
                     <span class="block text-sm text-text-secondary">${escapeHtml(row.merchant_email)}</span>
                 </td>
-                <td class="capitalize">${escapeHtml(row.type)}</td>
+                <td>
+                    <span class="inline-flex items-center gap-2">
+                        ${typeIconChip(row.type)}
+                        <span class="capitalize">${escapeHtml(row.type)}</span>
+                    </span>
+                </td>
                 <td class="font-mono text-sm">${escapeHtml(row.reference)}</td>
                 <td class="text-success">${row.type === 'deposit' ? money(row.amount) : '—'}</td>
                 <td class="text-danger">${row.type === 'withdrawal' ? money(row.amount) : '—'}</td>

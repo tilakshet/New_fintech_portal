@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     load_conversation($pdo, $conversationId, $user, $isOperator);
 
     $stmt = $pdo->prepare(
-        'SELECT m.id, m.sender_id, m.sender_role, m.message, m.created_at, m.read_at, u.name AS sender_name
+        'SELECT m.id, m.sender_id, m.sender_role, m.message, m.created_at, m.read_at, u.name AS sender_name, u.gender AS sender_gender
          FROM support_messages m JOIN users u ON u.id = m.sender_id
          WHERE m.conversation_id = ? AND m.id > ? ORDER BY m.id ASC'
     );

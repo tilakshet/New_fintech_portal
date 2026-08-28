@@ -17,13 +17,13 @@ render_hero_banner(
 
 <div class="mt-8">
     <div id="payment-gateway-tabs"
-         class="inline-flex w-full sm:w-auto rounded-md border border-border bg-surface-raised p-1 gap-1"
+         class="tab-list"
          role="tablist"
          aria-label="Payment gateway settings">
 
         <button type="button"
                 id="tab-access-token"
-                class="btn-primary !px-4 !py-2.5"
+                class="tab-btn"
                 role="tab"
                 aria-selected="true"
                 aria-controls="access-token-panel">
@@ -32,7 +32,7 @@ render_hero_banner(
 
         <button type="button"
                 id="tab-payment-gateway"
-                class="btn-secondary !px-4 !py-2.5"
+                class="tab-btn"
                 role="tab"
                 aria-selected="false"
                 aria-controls="payment-gateway-panel">
@@ -55,7 +55,7 @@ render_hero_banner(
         <!-- API Credentials -->
         <div class="card">
             <div class="flex items-center gap-2.5 mb-5">
-                <span class="flex items-center justify-center w-9 h-9 rounded-md bg-brand/10 text-brand shrink-0">
+                <span class="icon-chip-md icon-chip-brand">
                     <?= icon('key', 'w-5 h-5') ?>
                 </span>
                 <h2 class="card-title">API credentials</h2>
@@ -102,7 +102,7 @@ render_hero_banner(
         <!-- IP Whitelisting -->
         <div class="card">
             <div class="flex items-center gap-2.5 mb-5">
-                <span class="flex items-center justify-center w-9 h-9 rounded-md bg-brand/10 text-brand shrink-0">
+                <span class="icon-chip-md icon-chip-brand">
                     <?= icon('shield', 'w-5 h-5') ?>
                 </span>
                 <h2 class="card-title">IP whitelisting</h2>
@@ -154,7 +154,7 @@ render_hero_banner(
         <!-- Webhook Callbacks -->
         <div class="card">
             <div class="flex items-center gap-2.5 mb-5">
-                <span class="flex items-center justify-center w-9 h-9 rounded-md bg-brand/10 text-brand shrink-0">
+                <span class="icon-chip-md icon-chip-brand">
                     <?= icon('send', 'w-5 h-5') ?>
                 </span>
                 <h2 class="card-title">Webhook callbacks</h2>

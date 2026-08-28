@@ -12,6 +12,15 @@ render_hero_banner(
     ]
 );
 ?>
+<div class="card mb-5">
+    <div class="flex items-center justify-between gap-4 mb-2">
+        <p class="text-md font-semibold text-text-primary">Document checklist</p>
+        <p class="text-sm text-text-secondary"><span id="kyc-progress-count">0</span> of <?= count($docTypes) ?> uploaded</p>
+    </div>
+    <div class="progress-track">
+        <div id="kyc-progress-fill" class="progress-fill" style="width: 0%"></div>
+    </div>
+</div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
     <?php foreach ($docTypes as $type => $label): ?>
     <div class="card" data-doc-card="<?= e($type) ?>">

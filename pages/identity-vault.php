@@ -39,11 +39,11 @@ render_hero_banner(
 
         <div class="card">
             <h2 class="card-title mb-5">Settlement bank</h2>
-            <div id="settlement-readonly" class="hidden space-y-3 text-md">
-                <div class="flex justify-between gap-3"><span class="text-text-secondary">Holder</span><span id="sb-holder" class="font-semibold text-text-primary text-right"></span></div>
-                <div class="flex justify-between gap-3"><span class="text-text-secondary">A/C No.</span><span id="sb-account" class="font-semibold text-brand-emphasis text-right"></span></div>
-                <div class="flex justify-between gap-3"><span class="text-text-secondary">IFSC</span><span id="sb-ifsc" class="font-semibold text-text-primary text-right"></span></div>
-                <div class="flex justify-between gap-3"><span class="text-text-secondary">Bank</span><span id="sb-bank" class="font-semibold text-text-primary text-right"></span></div>
+            <div id="settlement-readonly" class="hidden space-y-3">
+                <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral"><?= icon('profile', 'w-4 h-4') ?></span><span class="min-w-0 flex-1"><span class="block text-xs text-text-secondary">Holder</span><span id="sb-holder" class="block text-md font-semibold text-text-primary truncate"></span></span></div>
+                <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral"><?= icon('key', 'w-4 h-4') ?></span><span class="min-w-0 flex-1"><span class="block text-xs text-text-secondary">A/C No.</span><span id="sb-account" class="block text-md font-semibold text-brand-emphasis truncate"></span></span></div>
+                <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral"><?= icon('key', 'w-4 h-4') ?></span><span class="min-w-0 flex-1"><span class="block text-xs text-text-secondary">IFSC</span><span id="sb-ifsc" class="block text-md font-semibold text-text-primary truncate"></span></span></div>
+                <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral"><?= icon('wallet', 'w-4 h-4') ?></span><span class="min-w-0 flex-1"><span class="block text-xs text-text-secondary">Bank</span><span id="sb-bank" class="block text-md font-semibold text-text-primary truncate"></span></span></div>
             </div>
             <p id="settlement-empty" class="hidden text-md text-text-secondary">Add your settlement bank details in the Business &amp; KYC form to the right.</p>
         </div>
@@ -58,15 +58,15 @@ render_hero_banner(
             <span>Business and KYC details are locked. To update these details, please contact your account manager or create a support ticket.</span>
         </div>
 
-        <dl id="kyc-readonly" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-md mb-2">
-            <div><dt class="text-text-secondary text-sm mb-0.5">Legal company name</dt><dd id="ro-company-name" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">Company type</dt><dd id="ro-company-type" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">Mobile number</dt><dd id="ro-mobile" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">WhatsApp</dt><dd id="ro-whatsapp" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">PAN number</dt><dd id="ro-pan" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">GSTIN</dt><dd id="ro-gstin" class="font-semibold text-text-primary"></dd></div>
-            <div><dt class="text-text-secondary text-sm mb-0.5">Aadhar number</dt><dd id="ro-aadhar" class="font-semibold text-text-primary"></dd></div>
-            <div class="sm:col-span-2"><dt class="text-text-secondary text-sm mb-0.5">Office address</dt><dd id="ro-address" class="font-semibold text-text-primary"></dd></div>
+        <dl id="kyc-readonly" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-2">
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('profile', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">Legal company name</dt><dd id="ro-company-name" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('documentation', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">Company type</dt><dd id="ro-company-type" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('support', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">Mobile number</dt><dd id="ro-mobile" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('support', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">WhatsApp</dt><dd id="ro-whatsapp" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('key', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">PAN number</dt><dd id="ro-pan" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('key', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">GSTIN</dt><dd id="ro-gstin" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('shield', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">Aadhar number</dt><dd id="ro-aadhar" class="font-semibold text-text-primary truncate"></dd></span></div>
+            <div class="sm:col-span-2 flex items-center gap-3"><span class="icon-chip-sm icon-chip-neutral shrink-0"><?= icon('documentation', 'w-4 h-4') ?></span><span class="min-w-0"><dt class="text-text-secondary text-sm mb-0.5">Office address</dt><dd id="ro-address" class="font-semibold text-text-primary"></dd></span></div>
         </dl>
 
         <form id="kyc-form" novalidate>

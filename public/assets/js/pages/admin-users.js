@@ -21,6 +21,18 @@
     let searchDebounce;
     let pendingTarget = null;
 
+    function avatarMarkup(u) {
+        const initials = escapeHtml(u.avatar_initials || u.name.slice(0, 2));
+        const gender = (u.gender === 'male' || u.gender === 'female') ? u.gender : (Number(u.id) % 2 === 0 ? 'female' : 'male');
+        const folder = gender === 'male' ? 'men' : 'women';
+        const idx = Number(u.id) % 100;
+        return `<span class="avatar-chip-sm !bg-transparent relative">
+            <img src="https://randomuser.me/api/portraits/${folder}/${idx}.jpg" alt="" class="absolute inset-0 w-full h-full rounded-full object-cover" loading="lazy" referrerpolicy="no-referrer"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="hidden absolute inset-0 rounded-full items-center justify-center bg-brand-muted text-brand-emphasis">${initials}</span>
+        </span>`;
+    }
+
     function buildQuery(page) {
         const params = new URLSearchParams(new FormData(form));
 
@@ -57,19 +69,13 @@
         if (!success) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center py-10">
-                        <p class="text-md text-text-primary font-medium mb-1">
-                            We couldn't load customers.
-                        </p>
-
-                        <p class="text-sm text-text-secondary mb-4">
-                            ${escapeHtml(message || 'Please try again.')}
-                        </p>
-
-                        <button class="btn-secondary"
-                                id="users-retry">
-                            Try again
-                        </button>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.9" fill="currentColor" stroke="none"/></svg></span>
+                            <p class="empty-state-title">We couldn't load customers.</p>
+                            <p class="empty-state-body">${escapeHtml(message || 'Please try again.')}</p>
+                            <button class="btn-secondary" id="users-retry">Try again</button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -86,9 +92,12 @@
         if (!data.users.length) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5"
-                        class="text-center py-10 text-text-secondary">
-                        No customers match these filters.
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <span class="empty-state-icon"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg></span>
+                            <p class="empty-state-title">No customers match these filters</p>
+                            <p class="empty-state-body">Try adjusting your search or status filter.</p>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -99,12 +108,10 @@
         }
 
         tbody.innerHTML = data.users.map((u) => `
-            <tr>
+            <tr class="border-l-4 ${u.status === 'active' ? 'border-l-success' : 'border-l-danger'}">
                 <td>
                     <span class="flex items-center gap-2.5">
-                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-sm shrink-0">
-                            ${escapeHtml(u.avatar_initials || u.name.slice(0, 2))}
-                        </span>
+                        ${avatarMarkup(u)}
 
                         <span class="min-w-0">
                             <span class="block text-md font-medium text-text-primary truncate">

@@ -47,12 +47,6 @@
         accessTokenPanel.classList.toggle('hidden', !showingAccessToken);
         paymentGatewayPanel.classList.toggle('hidden', showingAccessToken);
 
-        accessTokenTab.classList.toggle('btn-primary', showingAccessToken);
-        accessTokenTab.classList.toggle('btn-secondary', !showingAccessToken);
-
-        paymentGatewayTab.classList.toggle('btn-primary', !showingAccessToken);
-        paymentGatewayTab.classList.toggle('btn-secondary', showingAccessToken);
-
         accessTokenTab.setAttribute(
             'aria-selected',
             String(showingAccessToken)

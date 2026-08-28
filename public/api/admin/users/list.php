@@ -26,14 +26,14 @@ $whereSql = implode(' AND ', $where);
 $totalDocTypes = count(kyc_document_types());
 
 $stmt = $pdo->prepare(
-    "SELECT u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.created_at,
+    "SELECT u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.gender, u.created_at,
         COUNT(k.id) AS kyc_uploaded_count,
         SUM(CASE WHEN k.status = 'pending' THEN 1 ELSE 0 END) AS kyc_pending_count,
         SUM(CASE WHEN k.status = 'verified' THEN 1 ELSE 0 END) AS kyc_verified_count
      FROM users u
      LEFT JOIN kyc_documents k ON k.user_id = u.id
      WHERE {$whereSql}
-     GROUP BY u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.created_at
+     GROUP BY u.id, u.name, u.email, u.role, u.status, u.avatar_initials, u.gender, u.created_at
      ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset"
 );
 foreach ($params as $key => $value) {

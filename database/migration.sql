@@ -1,4 +1,4 @@
-﻿CREATE TABLE IF NOT EXISTS merchant_profiles (
+CREATE TABLE IF NOT EXISTS merchant_profiles (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     legal_company_name VARCHAR(160) NULL,

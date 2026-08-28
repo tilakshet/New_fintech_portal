@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * One-time migration: moves any KYC documents still sitting in the old flat
  * layout (storage/kyc-uploads/{user_id}_{type}_{random}.ext) into the new

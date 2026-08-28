@@ -25,9 +25,10 @@ render_hero_banner(
     </div>
 
     <div class="card !p-0 flex flex-col lg:col-span-2" id="thread-panel">
-        <div id="thread-empty" class="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
-            <p class="text-md font-medium text-text-primary mb-1">No conversation selected</p>
-            <p class="text-sm text-text-secondary mb-5">Start a new conversation to reach our support team.</p>
+        <div id="thread-empty" class="empty-state flex-1">
+            <span class="empty-state-icon"><?= icon('support', 'w-6 h-6') ?></span>
+            <p class="empty-state-title">No conversation selected</p>
+            <p class="empty-state-body">Start a new conversation to reach our support team.</p>
             <button type="button" class="btn-primary" data-modal-trigger="new-conversation-modal">Start a conversation</button>
         </div>
 

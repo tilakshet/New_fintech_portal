@@ -103,7 +103,15 @@
 
         const { customer, documents } = data;
 
-        avatarEl.textContent = customer.avatar_initials || customer.name.slice(0, 2).toUpperCase();
+        const initials = escapeHtml(customer.avatar_initials || customer.name.slice(0, 2).toUpperCase());
+        const gender = (customer.gender === 'male' || customer.gender === 'female') ? customer.gender : (Number(customer.id) % 2 === 0 ? 'female' : 'male');
+        const folder = gender === 'male' ? 'men' : 'women';
+        const idx = Number(customer.id) % 100;
+        avatarEl.classList.add('relative', '!bg-transparent');
+        avatarEl.innerHTML = `
+            <img src="https://randomuser.me/api/portraits/${folder}/${idx}.jpg" alt="" class="absolute inset-0 w-full h-full rounded-full object-cover" loading="lazy" referrerpolicy="no-referrer"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <span class="hidden absolute inset-0 rounded-full items-center justify-center bg-brand-muted text-brand-emphasis">${initials}</span>`;
         nameEl.textContent = customer.name;
         emailEl.textContent = customer.email;
 

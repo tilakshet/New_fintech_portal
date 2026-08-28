@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Minimal original icon set â€” 1.75px stroke, 24x24 viewBox, no fill.
  * Kept as static trusted SVG markup (not user input, safe to echo raw).
@@ -41,8 +41,7 @@ function icon(string $name, string $class = 'w-5 h-5'): string
         'download' => '<path d="M12 4v11M8.5 11.5 12 15l3.5-3.5"/><path d="M4 16v3.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V16"/>',
         'treasury' => '<rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 9.8V12l1.6 1"/><path d="M3 9h2.2M3 15h2.2M18.8 9H21M18.8 15H21"/>',
         'documentation' => '<path d="M7 3.5h7L18 7v13.5H7Z"/><path d="M14 3.5V7h4"/><path d="M9.5 12h5M9.5 15.5h5"/>',
-        'avatar-male' => '<circle cx="12" cy="8" r="3.4"/><path d="M9 5.1c.5-1.1 1.6-1.8 3-1.8s2.5.7 3 1.8"/><path d="M5 20c0-4.2 3.1-7.3 7-7.3s7 3.1 7 7.3"/><path d="M12 12.9v2.4l-.9 1.8h1.8l-.9-1.8Z" fill="currentColor" stroke="none"/>',
-        'avatar-female' => '<circle cx="12" cy="7.6" r="3.1"/><path d="M8.2 9.6C7.1 8.4 6.7 6.6 7.5 5 8.4 3.3 10.1 2.4 12 2.4s3.6.9 4.5 2.6c.8 1.6.4 3.4-.7 4.6"/><path d="M8 9.3v2.9M16 9.3v2.9"/><path d="M6 20c0-2.6.7-4.6 1.9-6.1L12 17l4.1-3.1C17.3 15.4 18 17.4 18 20Z"/>',
+        'inbox' => '<path d="M4 12h4l2 3h4l2-3h4"/><path d="M5.5 5h13L21 12v6a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18v-6Z"/>',
     ];
 
     $path = $paths[$name] ?? $paths['alert-circle'];

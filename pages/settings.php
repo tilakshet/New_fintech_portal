@@ -1,12 +1,15 @@
 <?php
+require_once __DIR__ . '/../includes/banner.php';
 $extraScripts = ['/assets/js/pages/settings.js'];
+
+render_hero_banner($user, 'Account security', 'Manage your password and account security.');
 ?>
-<div class="mb-6">
-    <p class="text-md text-text-secondary">Manage your account security.</p>
-</div>
 
 <div class="card max-w-xl">
-    <h2 class="card-title mb-5">Change password</h2>
+    <div class="flex items-center gap-2.5 mb-5">
+        <span class="icon-chip-md icon-chip-brand"><?= icon('shield', 'w-4 h-4') ?></span>
+        <h2 class="card-title">Change password</h2>
+    </div>
     <form id="password-form" novalidate>
         <div class="mb-5">
             <label for="current-password" class="field-label">Current password<span class="text-danger" aria-hidden="true"> *</span></label>

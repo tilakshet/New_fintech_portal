@@ -9,7 +9,7 @@ $pdo = db();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($isOperator) {
-        $sql = "SELECT c.id, c.subject, c.status, c.created_at, c.updated_at, u.id AS user_id, u.name AS user_name, u.email AS user_email,
+        $sql = "SELECT c.id, c.subject, c.status, c.created_at, c.updated_at, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.gender AS user_gender,
                        (SELECT message FROM support_messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_message,
                        (SELECT COUNT(*) FROM support_messages m WHERE m.conversation_id = c.id AND m.sender_role = 'customer' AND m.read_at IS NULL) AS unread_count
                 FROM support_conversations c JOIN users u ON u.id = c.user_id

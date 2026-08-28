@@ -7,7 +7,7 @@ render_hero_banner($user, 'Your profile', 'Manage your personal information and 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
     <div class="lg:col-span-1 space-y-5">
         <div class="card text-center">
-            <span class="mx-auto mb-4 flex items-center justify-center w-24 h-24 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-3xl"><?= user_avatar_markup($user, 'w-14 h-14') ?></span>
+            <span class="mx-auto mb-4 flex items-center justify-center w-24 h-24 rounded-full bg-brand-muted text-brand-emphasis font-semibold text-3xl"><?= user_avatar_markup($user) ?></span>
             <p class="text-3xl font-semibold text-text-primary truncate"><?= e($user['name']) ?></p>
             <p class="text-md text-text-secondary truncate"><?= e($user['email']) ?></p>
             <div class="flex items-center justify-center gap-2 mt-3">
@@ -35,16 +35,16 @@ render_hero_banner($user, 'Your profile', 'Manage your personal information and 
             <div class="mb-6">
                 <label for="p-email" class="field-label">Email address</label>
                 <input type="email" id="p-email" class="field-input" value="<?= e($user['email']) ?>" disabled>
-                <div class="mb-6">
-                    <label for="p-gender" class="field-label">Gender</label>
-                    <select id="p-gender" name="gender" class="field-input">
-                        <option value="" <?= empty($user['gender']) ? 'selected' : '' ?>>Prefer not to say</option>
-                        <option value="male" <?= ($user['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
-                        <option value="female" <?= ($user['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
-                        <option value="other" <?= ($user['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
-                    </select>
-                </div>
                 <p class="field-help">Contact support to change the email associated with your account.</p>
+            </div>
+            <div class="mb-6">
+                <label for="p-gender" class="field-label">Gender</label>
+                <select id="p-gender" name="gender" class="field-input">
+                    <option value="" <?= empty($user['gender']) ? 'selected' : '' ?>>Prefer not to say</option>
+                    <option value="male" <?= ($user['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
+                    <option value="female" <?= ($user['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
+                    <option value="other" <?= ($user['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
+                </select>
             </div>
             <button type="submit" id="profile-submit" class="btn-primary">Save changes</button>
         </form>
@@ -55,7 +55,7 @@ render_hero_banner($user, 'Your profile', 'Manage your personal information and 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
     <div class="card">
         <div class="flex items-center gap-2.5 mb-5">
-            <span class="flex items-center justify-center w-9 h-9 rounded-sm bg-brand-muted text-brand shrink-0"><?= icon('profile', 'w-5 h-5') ?></span>
+            <span class="icon-chip-md icon-chip-brand"><?= icon('profile', 'w-5 h-5') ?></span>
             <div>
                 <h2 class="card-title">Business &amp; KYC information</h2>
                 <p class="card-subtitle">Used to verify your account for higher transaction limits.</p>
@@ -112,7 +112,7 @@ render_hero_banner($user, 'Your profile', 'Manage your personal information and 
 
     <div class="card">
         <div class="flex items-center gap-2.5 mb-5">
-            <span class="flex items-center justify-center w-9 h-9 rounded-sm bg-brand-muted text-brand shrink-0"><?= icon('wallet', 'w-5 h-5') ?></span>
+            <span class="icon-chip-md icon-chip-brand"><?= icon('wallet', 'w-5 h-5') ?></span>
             <div>
                 <h2 class="card-title">Settlement bank</h2>
                 <p class="card-subtitle">Where withdrawals are sent.</p>

@@ -132,6 +132,8 @@ CREATE TABLE payment_gateways (
     webhook_secret_encrypted TEXT NULL,
     public_key VARCHAR(190) NULL,
     sandbox_mode TINYINT(1) NOT NULL DEFAULT 1,
+    consecutive_failures INT UNSIGNED NOT NULL DEFAULT 0,
+    auto_paused_until DATETIME NULL,
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'inactive',
     is_default TINYINT(1) NOT NULL DEFAULT 0,
     priority INT UNSIGNED NOT NULL DEFAULT 100,

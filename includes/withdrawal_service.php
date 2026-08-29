@@ -1,9 +1,9 @@
 <?php
 /**
- * Shared withdrawal logic, used by both the browser-session endpoint
- * (public/api/withdrawals/create.php) and the partner API endpoint
- * (public/api/partner/withdrawals/create.php). See deposit_service.php
- * for the return-array convention this follows.
+ * Shared withdrawal logic, called by public/api/withdrawals/create.php.
+ * Accepts an optional idempotency key for future callers (e.g. a partner
+ * API) that need replay protection — the browser flow never passes one.
+ * See deposit_service.php for the return-array convention this follows.
  */
 
 require_once __DIR__ . '/money.php';

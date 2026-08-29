@@ -616,4 +616,12 @@ render_modal(
     true
 );
 
+render_modal(
+    'clear-pause-modal',
+    'Clear auto-pause?',
+    '<p id="clear-pause-body"></p>',
+    'Clear pause',
+    'id="clear-pause-confirm-btn"'
+);
+
 ?>

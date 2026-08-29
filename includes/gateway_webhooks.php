@@ -18,6 +18,7 @@
  */
 
 require_once __DIR__ . '/money.php';
+require_once __DIR__ . '/gateway_selector.php';
 
 function verify_generic_webhook_signature(string $rawBody, string $signatureHeader, string $secret): bool
 {
@@ -171,6 +172,10 @@ function apply_transaction_outcome(PDO $pdo, array $transaction, string $outcome
 
     $pdo->prepare('UPDATE transactions SET status = ?, gateway_txn_id = COALESCE(?, gateway_txn_id) WHERE id = ?')
         ->execute([$outcome, $gatewayTxnId, $transaction['id']]);
+
+    if (!empty($transaction['gateway_id'])) {
+        record_gateway_outcome($pdo, (int) $transaction['gateway_id'], $outcome === 'success');
+    }
 
     $title = $transaction['type'] === 'deposit' ? 'Deposit' : 'Withdrawal';
     $message = $outcome === 'success'

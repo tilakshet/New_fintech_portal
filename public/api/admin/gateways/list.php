@@ -15,7 +15,6 @@ $providerWebhookPaths = ['razorpay' => 'razorpay.php', 'cashfree' => 'cashfree.p
 $pdo = db();
 $stmt = $pdo->query(
     'SELECT id, display_name, provider, api_key_last4, public_key, sandbox_mode, status, is_default, priority, daily_limit_amount,
-    'SELECT id, display_name, provider, api_key_last4, public_key, status, is_default, priority, daily_limit_amount,
             consecutive_failures, auto_paused_until,
             (webhook_secret_encrypted IS NOT NULL) AS webhook_configured,
             (api_key_encrypted IS NOT NULL) AS has_live_secret, created_at, updated_at

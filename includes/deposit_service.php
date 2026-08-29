@@ -1,12 +1,11 @@
 <?php
 /**
  * Shared deposit logic, used by both the browser-session endpoint
- * (public/api/deposits/create.php) and the partner API endpoint
- * (public/api/partner/deposits/create.php).
+ * (public/api/deposits/create.php) and any future partner endpoint.
  *
  * Deliberately does NOT call json_response() — that function exits
  * immediately, which is correct for a single endpoint but wrong for
- * logic two different endpoints need to call. Instead every path
+ * logic more than one endpoint needs to call. Instead every path
  * returns:
  *   ['ok' => bool, 'status_code' => int, 'message' => string, 'data' => array|null]
  * and the calling endpoint is responsible for turning that into the
@@ -16,14 +15,14 @@
 require_once __DIR__ . '/money.php';
 require_once __DIR__ . '/gateway_selector.php';
 require_once __DIR__ . '/gateway_webhooks.php';
-require_once __DIR__ . '/gateway_providers/razorpay.php';
+require_once __DIR__ . '/gateway_providers/dispatch.php';
 
 function create_deposit(PDO $pdo, array $user, $rawAmount, $rawMethod, ?string $idempotencyKey = null): array
 {
-    // Partner API replay protection (FR-003): if this exact idempotency
-    // key was already used, return the original result instead of
-    // creating a second deposit. The browser flow never passes a key
-    // here, so this block is a no-op for it.
+    // Replay protection: if this exact idempotency key was already used,
+    // return the original result instead of creating a second deposit.
+    // The browser flow never passes a key here, so this block is a no-op
+    // for it.
     if ($idempotencyKey !== null) {
         $existingStmt = $pdo->prepare(
             'SELECT reference, status, amount, fee, net_amount, method FROM transactions WHERE idempotency_key = ?'
@@ -80,13 +79,13 @@ function create_deposit(PDO $pdo, array $user, $rawAmount, $rawMethod, ?string $
         $gateway = $selection['gateway'];
         $gatewayId = (int) $gateway['id'];
 
-        // A Razorpay gateway with real credentials configured settles for
-        // real via checkout + webhook, so it can never be synchronously
+        // A gateway with a real, live-integrated provider settles for real
+        // via checkout + webhook, so it can never be synchronously
         // "success" regardless of method — that simulated instant-success
         // path only still applies to gateways nothing has actually been
-        // wired up to yet (see the razorpay_configured branch below).
-        $razorpayConfigured = $gateway['provider'] === 'razorpay' && $gateway['public_key'] && $gateway['api_key_encrypted'];
-        $status = (!$razorpayConfigured && $method === 'Debit card') ? 'success' : 'pending';
+        // wired up to yet.
+        $liveGatewayConfigured = gateway_supports_live_order_creation($gateway);
+        $status = (!$liveGatewayConfigured && $method === 'Debit card') ? 'success' : 'pending';
 
         $insert = $pdo->prepare(
             'INSERT INTO transactions (user_id, type, method, amount, fee, net_amount, currency, status, reference, destination, gateway_id, idempotency_key)
@@ -116,38 +115,45 @@ function create_deposit(PDO $pdo, array $user, $rawAmount, $rawMethod, ?string $
 
     write_audit_log($user['id'], 'deposit_created', 'transaction', $txnId, ['amount' => $amount, 'method' => $method, 'status' => $status, 'gateway_id' => $gatewayId]);
 
-    // The outbound call to Razorpay happens only now, after the DB
+    // The outbound call to the provider happens only now, after the DB
     // transaction has committed — never make a network call while holding
     // the wallet/usage row locks above.
     $checkout = null;
     $message = $status === 'success' ? 'Deposit completed.' : 'Deposit submitted and pending settlement.';
 
-    if ($razorpayConfigured) {
+    if ($liveGatewayConfigured) {
+        $phoneStmt = $pdo->prepare('SELECT mobile_number FROM business_profiles WHERE user_id = ?');
+        $phoneStmt->execute([$user['id']]);
+        $customerPhone = $phoneStmt->fetchColumn() ?: null;
+
         try {
-            $order = razorpay_create_order($gateway, $reference, $amount, 'INR');
-            $pdo->prepare('UPDATE transactions SET gateway_txn_id = ? WHERE id = ?')->execute([$order['order_id'], $txnId]);
-            $checkout = [
-                'provider' => 'razorpay',
-                'order_id' => $order['order_id'],
-                'key_id' => $order['key_id'],
-                'amount' => $order['amount_paise'],
-                'currency' => 'INR',
-            ];
+            $orderResult = create_gateway_order($gateway, $reference, $amount, $user, $customerPhone);
+            $pdo->prepare('UPDATE transactions SET gateway_txn_id = ? WHERE id = ?')->execute([$orderResult['gateway_txn_id'], $txnId]);
+            $checkout = $orderResult['checkout'];
             $message = 'Complete your payment to finish this deposit.';
-        } catch (RazorpayAmbiguousException $e) {
-            // We do not know if Razorpay actually created the order — never
-            // auto-retry on a different gateway here. The transaction stays
-            // pending with no order_id; only a webhook (or manual admin
-            // reconciliation) can resolve it from here.
-            error_log('[create_deposit] razorpay order ambiguous: ' . $e->getMessage());
-            write_audit_log($user['id'], 'deposit_gateway_order_ambiguous', 'transaction', $txnId, ['gateway_id' => $gatewayId, 'reason' => $e->getMessage()]);
+        } catch (GatewayOrderAmbiguousException $e) {
+            // We do not know if the provider actually created the order —
+            // never auto-retry on a different gateway here. The transaction
+            // stays pending with no order id; only a webhook (or manual
+            // admin reconciliation) can resolve it from here.
+            error_log('[create_deposit] gateway order ambiguous: ' . $e->getMessage());
+            write_audit_log($user['id'], 'deposit_gateway_order_ambiguous', 'transaction', $txnId, ['gateway_id' => $gatewayId, 'provider' => $gateway['provider'], 'reason' => $e->getMessage()]);
             $message = 'Deposit submitted, but we could not confirm the payment gateway accepted it yet. This will update automatically once confirmed — contact support if a payment was taken and this does not resolve.';
         } catch (Throwable $e) {
             // A definite, synchronous rejection — unlike the ambiguous case
-            // above, we know for certain no order was created, so it's safe
-            // to unwind the reservation and mark this attempt failed.
-            error_log('[create_deposit] razorpay order failed: ' . $e->getMessage());
-            write_audit_log($user['id'], 'deposit_gateway_order_failed', 'transaction', $txnId, ['gateway_id' => $gatewayId, 'reason' => $e->getMessage()]);
+            // above, we know for certain no order was created, so it's
+            // safe to unwind the reservation and mark this attempt failed.
+            //
+            // GatewayCustomerActionRequiredException's message is written
+            // to be safe and useful shown verbatim (e.g. "add a phone
+            // number"); any other failure's message is an opaque provider
+            // rejection reason (e.g. "Authentication failed") that must
+            // NOT reach the customer — it means something is misconfigured
+            // on our side, not theirs.
+            $isCustomerActionable = $e instanceof GatewayCustomerActionRequiredException;
+
+            error_log('[create_deposit] gateway order failed: ' . $e->getMessage());
+            write_audit_log($user['id'], 'deposit_gateway_order_failed', 'transaction', $txnId, ['gateway_id' => $gatewayId, 'provider' => $gateway['provider'], 'reason' => $e->getMessage()]);
 
             $pdo->beginTransaction();
             try {
@@ -164,13 +170,13 @@ function create_deposit(PDO $pdo, array $user, $rawAmount, $rawMethod, ?string $
                 $pdo->commit();
             } catch (Throwable $e2) {
                 $pdo->rollBack();
-                error_log('[create_deposit] failed to unwind razorpay order failure: ' . $e2->getMessage());
+                error_log('[create_deposit] failed to unwind gateway order failure: ' . $e2->getMessage());
             }
 
             return [
                 'ok' => false,
-                'status_code' => 502,
-                'message' => 'This deposit could not be started — the payment gateway rejected the request. Please try again.',
+                'status_code' => $isCustomerActionable ? 422 : 502,
+                'message' => $isCustomerActionable ? $e->getMessage() : 'This deposit could not be started — the payment gateway rejected the request. Please try again.',
                 'data' => ['reference' => $reference],
             ];
         }

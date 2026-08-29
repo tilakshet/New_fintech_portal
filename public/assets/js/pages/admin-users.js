@@ -163,17 +163,6 @@
                             `
                             : ''}
 
-                        ${u.role === 'customer'
-                            ? `
-                                <button type="button"
-                                        class="btn-secondary !px-3 !py-2 api-access-btn"
-                                        data-id="${u.id}"
-                                        data-name="${escapeHtml(u.name)}">
-                                    API Access
-                                </button>
-                            `
-                            : ''}
-
                         ${u.status === 'active'
                             ? `
                                 <button type="button"
@@ -235,9 +224,6 @@
             });
 
         tbody
-            .querySelectorAll('.api-access-btn')
-            .forEach((btn) => {
-                btn.addEventListener('click', () => openApiAccessModal(btn.dataset.id, btn.dataset.name));
             .querySelectorAll('.api-ips-btn')
             .forEach((btn) => {
                 btn.addEventListener('click', () => {
@@ -444,154 +430,6 @@
             pendingTarget = null;
         });
 
-    // --- API Access modal ---------------------------------------------
-
-    let apiAccessUserId = null;
-
-    async function openApiAccessModal(userId, name) {
-        apiAccessUserId = userId;
-
-        document.getElementById('api-access-title').textContent = `API Access — ${name}`;
-        document.getElementById('api-access-token-reveal').classList.add('hidden');
-        document.getElementById('api-access-error').classList.add('hidden');
-
-        openModal('api-access-modal');
-        renderApiAccessLoading();
-
-        const { success, data, message } = await apiFetch(`/api/admin/api-clients/get.php?user_id=${userId}`);
-
-        if (!success) {
-            document.getElementById('api-access-error').textContent = message;
-            document.getElementById('api-access-error').classList.remove('hidden');
-            return;
-        }
-
-        renderApiAccessState(data);
-    }
-
-    function renderApiAccessLoading() {
-        document.getElementById('api-access-status').textContent = 'Loading…';
-        document.getElementById('api-access-settings-form').classList.add('hidden');
-    }
-
-    function renderApiAccessState(data) {
-        const statusEl = document.getElementById('api-access-status');
-        const revokeBtn = document.getElementById('api-access-revoke-btn');
-        const generateBtn = document.getElementById('api-access-generate-btn');
-        const settingsFields = document.getElementById('api-access-settings-form');
-
-        if (!data.credential) {
-            statusEl.innerHTML = `<span class="badge-neutral">Not configured</span>`;
-            revokeBtn.classList.add('hidden');
-            generateBtn.textContent = 'Generate API key';
-            settingsFields.classList.add('hidden');
-            return;
-        }
-
-        const c = data.credential;
-        const badge = c.status === 'active' ? 'badge-success' : 'badge-danger';
-
-        statusEl.innerHTML = `
-            <span class="${badge}">${escapeHtml(c.status)}</span>
-            <span class="text-text-secondary text-sm ml-2">
-                ${escapeHtml(c.client_key)} · ends in ${escapeHtml(c.token_last4)}
-            </span>
-        `;
-
-        revokeBtn.classList.toggle('hidden', c.status !== 'active');
-        generateBtn.textContent = 'Rotate API key';
-
-        document.getElementById('api-access-payin').value = c.payin_callback_url || '';
-        document.getElementById('api-access-payout').value = c.payout_callback_url || '';
-        document.getElementById('api-access-ips').value = (data.whitelisted_ips || []).join('\n');
-        settingsFields.classList.remove('hidden');
-    }
-
-    document
-        .getElementById('api-access-generate-btn')
-        .addEventListener('click', async function () {
-            if (!apiAccessUserId) {
-                return;
-            }
-
-            setButtonLoading(this, true);
-
-            const { success, data, message } = await apiFetch(
-                '/api/admin/api-clients/generate.php',
-                { method: 'POST', body: { user_id: apiAccessUserId } }
-            );
-
-            setButtonLoading(this, false);
-
-            if (!success) {
-                showToast(message, 'error');
-                return;
-            }
-
-            document.getElementById('api-access-token-value').textContent = data.token;
-            document.getElementById('api-access-token-reveal').classList.remove('hidden');
-
-            showToast(message, 'success');
-
-            const refreshed = await apiFetch(`/api/admin/api-clients/get.php?user_id=${apiAccessUserId}`);
-            if (refreshed.success) {
-                renderApiAccessState(refreshed.data);
-            }
-        });
-
-    document
-        .getElementById('api-access-revoke-btn')
-        .addEventListener('click', async function () {
-            if (!apiAccessUserId || !confirm('Revoke this customer\'s API access? Their key will stop working immediately.')) {
-                return;
-            }
-
-            setButtonLoading(this, true);
-
-            const { success, message } = await apiFetch(
-                '/api/admin/api-clients/revoke.php',
-                { method: 'POST', body: { user_id: apiAccessUserId } }
-            );
-
-            setButtonLoading(this, false);
-            showToast(message, success ? 'success' : 'error');
-
-            if (success) {
-                const refreshed = await apiFetch(`/api/admin/api-clients/get.php?user_id=${apiAccessUserId}`);
-                if (refreshed.success) {
-                    renderApiAccessState(refreshed.data);
-                }
-            }
-        });
-
-    document
-        .getElementById('api-access-settings-form')
-        .addEventListener('submit', async function (event) {
-            event.preventDefault();
-
-            if (!apiAccessUserId) {
-                return;
-            }
-
-            const submitBtn = document.getElementById('api-access-settings-submit');
-            setButtonLoading(submitBtn, true);
-
-            const { success, message } = await apiFetch(
-                '/api/admin/api-clients/save-settings.php',
-                {
-                    method: 'POST',
-                    body: {
-                        user_id: apiAccessUserId,
-                        payin_callback_url: document.getElementById('api-access-payin').value.trim(),
-                        payout_callback_url: document.getElementById('api-access-payout').value.trim(),
-                        whitelisted_ips: document.getElementById('api-access-ips').value,
-                    }
-                }
-            );
-
-            setButtonLoading(submitBtn, false);
-            showToast(message, success ? 'success' : 'error');
-        });
     let apiIpsTargetId = null;
 
     async function loadApiIps() {

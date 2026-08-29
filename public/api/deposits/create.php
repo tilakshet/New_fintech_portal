@@ -15,8 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-$amount = sanitize_amount($input['amount'] ?? null);
-$method = in_array($input['method'] ?? '', ['Bank transfer', 'Debit card'], true) ? $input['method'] : null;
+$result = create_deposit(db(), $user, $input['amount'] ?? null, $input['method'] ?? null);
 
 if ($amount === null || money_cmp($amount, '10.00') < 0) {
     json_response(false, null, 'Enter an amount of at least ₹10.00.', 422);

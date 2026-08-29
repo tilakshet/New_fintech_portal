@@ -38,6 +38,7 @@
 
     let pendingDeleteId = null;
     let pendingResetId = null;
+    let pendingClearPauseId = null;
 
     // Providers with a real live-order-creation adapter, and the label
     // their public identifier goes by - keep in sync with
@@ -193,6 +194,14 @@
                         : 'badge-neutral'}">
                         ${escapeHtml(g.status)}
                     </span>
+
+                    ${g.auto_paused
+                        ? `
+                            <span class="badge-warning block mt-1">
+                                Auto-paused
+                            </span>
+                        `
+                        : ''}
                 </td>
 
                 <td class="text-right whitespace-nowrap">
@@ -254,6 +263,17 @@
                                 data-sandbox-mode="${g.sandbox_mode}">
                             Rotate key
                         </button>
+
+                        ${g.auto_paused
+                            ? `
+                                <button type="button"
+                                        class="btn-secondary !px-3 !py-1.5 clear-pause-btn"
+                                        data-id="${g.id}"
+                                        data-name="${escapeHtml(g.display_name)}">
+                                    Clear pause
+                                </button>
+                            `
+                            : ''}
 
                         ${!g.is_default
                             ? `
@@ -388,6 +408,17 @@
                 document.getElementById('cw-error').classList.add('hidden');
 
                 openModal('configure-webhook-modal');
+            });
+        });
+
+        tbody.querySelectorAll('.clear-pause-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                pendingClearPauseId = btn.dataset.id;
+
+                document.getElementById('clear-pause-body').textContent =
+                    `${btn.dataset.name} will be eligible for selection again immediately, and its failure count will be reset to zero.`;
+
+                openModal('clear-pause-modal');
             });
         });
 
@@ -613,6 +644,43 @@
 
             if (success) {
                 pendingResetId = null;
+                load();
+            }
+        });
+
+    document
+        .getElementById('clear-pause-confirm-btn')
+        .addEventListener('click', async function () {
+            if (!pendingClearPauseId) {
+                return;
+            }
+
+            setButtonLoading(this, true);
+
+            const {
+                success,
+                message
+            } = await apiFetch(
+                '/api/admin/gateways/clear-pause.php',
+                {
+                    method: 'POST',
+                    body: {
+                        id: pendingClearPauseId
+                    }
+                }
+            );
+
+            setButtonLoading(this, false);
+
+            closeModal('clear-pause-modal');
+
+            showToast(
+                message,
+                success ? 'success' : 'error'
+            );
+
+            if (success) {
+                pendingClearPauseId = null;
                 load();
             }
         });

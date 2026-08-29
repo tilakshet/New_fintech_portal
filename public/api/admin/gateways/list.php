@@ -15,6 +15,8 @@ $providerWebhookPaths = ['razorpay' => 'razorpay.php', 'cashfree' => 'cashfree.p
 $pdo = db();
 $stmt = $pdo->query(
     'SELECT id, display_name, provider, api_key_last4, public_key, sandbox_mode, status, is_default, priority, daily_limit_amount,
+    'SELECT id, display_name, provider, api_key_last4, public_key, status, is_default, priority, daily_limit_amount,
+            consecutive_failures, auto_paused_until,
             (webhook_secret_encrypted IS NOT NULL) AS webhook_configured,
             (api_key_encrypted IS NOT NULL) AS has_live_secret, created_at, updated_at
      FROM payment_gateways ORDER BY is_default DESC, priority ASC, created_at ASC'
@@ -28,6 +30,7 @@ foreach ($gateways as &$gateway) {
     $gateway['remaining_today'] = $gateway['daily_limit_amount'] === null
         ? null
         : money_sub($gateway['daily_limit_amount'], $usage['used_amount']);
+    $gateway['auto_paused'] = $gateway['auto_paused_until'] !== null && $gateway['auto_paused_until'] > gmdate('Y-m-d H:i:s');
     $gateway['webhook_configured'] = (bool) $gateway['webhook_configured'];
     $gateway['sandbox_mode'] = (bool) $gateway['sandbox_mode'];
     // gateway_supports_live_order_creation() checks a real api_key_encrypted

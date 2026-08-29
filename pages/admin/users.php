@@ -210,3 +210,68 @@ render_modal(
 );
 
 ?>
+
+<!-- API Access Modal -->
+<dialog id="api-access-modal"
+        class="rounded-md p-0 backdrop:bg-black/40 w-full max-w-lg"
+        aria-labelledby="api-access-title">
+
+    <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-border">
+        <h2 id="api-access-title" class="text-3xl font-semibold text-text-primary">API Access</h2>
+
+        <button type="button" class="btn-icon" data-modal-close aria-label="Close dialog">
+            <?= icon('close', 'w-5 h-5') ?>
+        </button>
+    </div>
+
+    <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+
+        <p id="api-access-error" class="field-error hidden"></p>
+
+        <div>
+            <p class="field-label mb-2">Status</p>
+            <p id="api-access-status"></p>
+        </div>
+
+        <div id="api-access-token-reveal" class="hidden bg-warning-bg border border-warning/30 rounded-md p-4 space-y-2">
+            <p class="text-sm font-medium text-text-primary">Copy this API key now — it will not be shown again.</p>
+            <code id="api-access-token-value" class="block text-sm font-mono break-all bg-surface rounded px-3 py-2"></code>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="button" id="api-access-generate-btn" class="btn-primary">
+                Generate API key
+            </button>
+
+            <button type="button" id="api-access-revoke-btn" class="btn-danger hidden">
+                Revoke access
+            </button>
+        </div>
+
+        <form id="api-access-settings-form" class="space-y-4 pt-4 border-t border-border hidden">
+
+            <div>
+                <label for="api-access-payin" class="field-label">Pay-in callback URL</label>
+                <input type="url" id="api-access-payin" class="field-input" placeholder="https://client.example.com/webhooks/payin">
+                <p class="field-help">Verapay notifies this URL when a deposit this client created settles.</p>
+            </div>
+
+            <div>
+                <label for="api-access-payout" class="field-label">Payout callback URL</label>
+                <input type="url" id="api-access-payout" class="field-input" placeholder="https://client.example.com/webhooks/payout">
+            </div>
+
+            <div>
+                <label for="api-access-ips" class="field-label">IP whitelist</label>
+                <textarea id="api-access-ips" class="field-input font-mono" rows="3" placeholder="One IP address per line. Leave blank to allow any IP."></textarea>
+                <p class="field-help">If this list is empty, requests are accepted from any IP — add at least one to restrict access.</p>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" id="api-access-settings-submit" class="btn-secondary">
+                    Save settings
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>

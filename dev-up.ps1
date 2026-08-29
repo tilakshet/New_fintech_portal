@@ -123,14 +123,24 @@ if (-not $ready) {
     Fail "App container never became ready. Run 'docker compose logs -f app' to see why."
 }
 
-# 6. Seed demo data
+# 6. Apply any pending database migrations. Safe on every run: a fresh
+# volume's schema.sql already has everything, so this is a no-op; a stale
+# volume from an older checkout (the case that used to fail with "Table
+# ... doesn't exist") gets patched up automatically.
+Write-Host "Checking database schema..." -ForegroundColor Cyan
+docker compose exec -T app php database/migrate.php
+if ($LASTEXITCODE -ne 0) {
+    Fail "Migration failed - check the output above."
+}
+
+# 7. Seed demo data
 Write-Host "Seeding demo data..." -ForegroundColor Cyan
 docker compose exec -T app php database/seed.php
 if ($LASTEXITCODE -ne 0) {
     Fail "Seeding failed - check the output above."
 }
 
-# 7. Open the app
+# 8. Open the app
 $url = "http://localhost:8080/login"
 Write-Host "`nVerapay is up: $url" -ForegroundColor Green
 Write-Host "Demo login: priya@verapay.test / Demo!2024pass (admin: admin@verapay.test)"

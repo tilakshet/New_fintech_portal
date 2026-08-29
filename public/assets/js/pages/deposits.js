@@ -102,6 +102,46 @@
         rzp.open();
     }
 
+    // Same lazy-load pattern as Razorpay above, for Cashfree's Drop-in
+    // Checkout widget - only loaded when a deposit actually routes
+    // through a live Cashfree-integrated gateway.
+    let cashfreeScriptPromise = null;
+    function loadCashfreeCheckoutScript() {
+        if (cashfreeScriptPromise) return cashfreeScriptPromise;
+        cashfreeScriptPromise = new Promise((resolve, reject) => {
+            if (window.Cashfree) { resolve(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Could not load the payment widget.'));
+            document.head.appendChild(script);
+        });
+        return cashfreeScriptPromise;
+    }
+
+    async function launchCashfreeCheckout(checkout) {
+        try {
+            await loadCashfreeCheckoutScript();
+        } catch (err) {
+            showToast('Could not load the payment window. Please try again.', 'error');
+            return;
+        }
+
+        const cashfree = window.Cashfree({ mode: checkout.environment });
+
+        // Modal target keeps the customer on this page - the wallet is
+        // credited by the webhook once the gateway confirms, never from
+        // this call's return value.
+        cashfree.checkout({
+            paymentSessionId: checkout.payment_session_id,
+            redirectTarget: '_modal',
+        }).then(() => {
+            showToast('Payment window closed — confirming with the gateway.', 'success');
+            loadBalance();
+            loadRecentDeposits();
+        });
+    }
+
     document.getElementById('deposit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const amountError = document.getElementById('amount-error');
@@ -140,6 +180,10 @@
 
         if (data.checkout && data.checkout.provider === 'razorpay') {
             launchRazorpayCheckout(data.checkout, data.reference);
+            return;
+        }
+        if (data.checkout && data.checkout.provider === 'cashfree') {
+            launchCashfreeCheckout(data.checkout);
             return;
         }
 

@@ -1,24 +1,32 @@
-CREATE TABLE client_api_credentials (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL,          -- the business customer this key belongs to
-    client_key VARCHAR(40) NOT NULL,        -- public id, shown in the dashboard (e.g. ck_live_xxxx)
-    token_hash CHAR(64) NOT NULL,           -- SHA-256 of the actual bearer token — never store it plaintext
-    token_last4 VARCHAR(4) NOT NULL,        -- for display ("...a91f") without re-exposing the token
-    status ENUM('active','revoked') NOT NULL DEFAULT 'active',
-    payin_callback_url VARCHAR(255) NULL,
-    payout_callback_url VARCHAR(255) NULL,
-    generated_at DATETIME NOT NULL,
-    revoked_at DATETIME NULL,
-    UNIQUE KEY uq_client_api_credentials_user (user_id),
-    UNIQUE KEY uq_client_api_credentials_key (client_key),
-    UNIQUE KEY uq_client_api_credentials_token_hash (token_hash),
-    CONSTRAINT fk_client_api_credentials_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+-- Per-customer API credentials (one row per user) replacing the
+-- single platform-wide credential set in platform_api_settings, plus an
+-- admin-managed per-customer IP whitelist. See schema.sql for the design
+-- rationale on each table. Apply to any database that predates this.
 
-CREATE TABLE client_whitelisted_ips (
+CREATE TABLE IF NOT EXISTS customer_api_credentials (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    credential_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    client_key VARCHAR(40) NOT NULL,
+    secret_key_hash VARCHAR(255) NOT NULL,
+    secret_key_last4 VARCHAR(4) NOT NULL,
+    bearer_token TEXT NULL,
+    bearer_token_generated_at DATETIME NULL,
+    payout_callback_url VARCHAR(255) NULL,
+    payin_callback_url VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_customer_api_credentials_user (user_id),
+    UNIQUE KEY uq_customer_api_credentials_client_key (client_key),
+    CONSTRAINT fk_customer_api_credentials_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS customer_whitelisted_ips (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
     ip_address VARCHAR(45) NOT NULL,
-    UNIQUE KEY uq_client_whitelisted_ips (credential_id, ip_address),
-    CONSTRAINT fk_client_whitelisted_ips_credential FOREIGN KEY (credential_id) REFERENCES client_api_credentials(id) ON DELETE CASCADE
-);
+    added_by INT UNSIGNED NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_customer_whitelisted_ips (user_id, ip_address),
+    CONSTRAINT fk_customer_whitelisted_ips_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_customer_whitelisted_ips_admin FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

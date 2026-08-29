@@ -153,6 +153,13 @@
                                         ? `<span class="badge-warning !px-1.5 !py-0.5 !text-xs">${u.kyc_pending_count}</span>`
                                         : ''}
                                 </a>
+
+                                <button type="button"
+                                        class="btn-ghost !px-3 !py-2 api-ips-btn"
+                                        data-id="${u.id}"
+                                        data-name="${escapeHtml(u.name)}">
+                                    API access
+                                </button>
                             `
                             : ''}
 
@@ -231,6 +238,11 @@
             .querySelectorAll('.api-access-btn')
             .forEach((btn) => {
                 btn.addEventListener('click', () => openApiAccessModal(btn.dataset.id, btn.dataset.name));
+            .querySelectorAll('.api-ips-btn')
+            .forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    openApiIpsModal(btn.dataset.id, btn.dataset.name);
+                });
             });
 
         const {
@@ -580,6 +592,102 @@
             setButtonLoading(submitBtn, false);
             showToast(message, success ? 'success' : 'error');
         });
+    let apiIpsTargetId = null;
+
+    async function loadApiIps() {
+        const { success, data, message } = await apiFetch(`/api/admin/users/api-ips.php?user_id=${apiIpsTargetId}`);
+
+        if (!success) {
+            showToast(message || 'Unable to load API access.', 'error');
+            return;
+        }
+
+        document.getElementById('api-ips-no-creds').classList.toggle('hidden', data.has_api_credentials);
+        document.getElementById('api-ips-body').classList.toggle('hidden', !data.has_api_credentials);
+
+        if (data.has_api_credentials) {
+            document.getElementById('api-ips-client-key').textContent = data.client_key;
+            document.getElementById('api-ips-token-status').innerHTML = data.has_bearer_token
+                ? `<span class="badge-success">Generated</span> <span class="text-xs text-text-secondary block mt-0.5">${new Date(data.bearer_token_generated_at).toLocaleString()}</span>`
+                : '<span class="badge-neutral">Not generated</span>';
+            document.getElementById('api-ips-payin-url').innerHTML = data.payin_callback_url
+                ? escapeHtml(data.payin_callback_url)
+                : '<span class="text-text-secondary">Not set</span>';
+            document.getElementById('api-ips-payout-url').innerHTML = data.payout_callback_url
+                ? escapeHtml(data.payout_callback_url)
+                : '<span class="text-text-secondary">Not set</span>';
+        }
+
+        const list = document.getElementById('api-ips-list');
+        if (!data.whitelisted_ips.length) {
+            list.innerHTML = '<li class="text-sm text-text-secondary rounded-sm border border-dashed border-border px-3 py-3 text-center">No IPs whitelisted yet.</li>';
+        } else {
+            list.innerHTML = data.whitelisted_ips.map((row) => `
+                <li class="flex items-center justify-between gap-3 rounded-sm border border-border px-3 py-2.5">
+                    <span class="min-w-0">
+                        <span class="block font-mono text-sm text-text-primary">${escapeHtml(row.ip_address)}</span>
+                        <span class="block text-xs text-text-secondary">Added ${new Date(row.created_at).toLocaleDateString()}${row.added_by_name ? ` by ${escapeHtml(row.added_by_name)}` : ''}</span>
+                    </span>
+                    <button type="button" class="btn-icon shrink-0 text-lg leading-none" data-remove-ip="${row.id}" aria-label="Remove ${escapeHtml(row.ip_address)}">×</button>
+                </li>`).join('');
+
+            list.querySelectorAll('[data-remove-ip]').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    btn.disabled = true;
+                    const { success: removeSuccess, message: removeMessage } = await apiFetch(
+                        '/api/admin/users/remove-api-ip.php',
+                        { method: 'POST', body: { id: btn.dataset.removeIp } }
+                    );
+                    if (!removeSuccess) {
+                        showToast(removeMessage || 'Unable to remove that IP.', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+                    showToast('IP removed.', 'success');
+                    loadApiIps();
+                });
+            });
+        }
+    }
+
+    function openApiIpsModal(userId, name) {
+        apiIpsTargetId = userId;
+        document.getElementById('api-ips-target').textContent = `Manage which IPs can use ${name}'s API token.`;
+        document.getElementById('api-ips-new').value = '';
+        document.getElementById('api-ips-error').classList.add('hidden');
+        openModal('api-ips-modal');
+        loadApiIps();
+    }
+
+    document.getElementById('api-ips-add').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const input = document.getElementById('api-ips-new');
+        const errorEl = document.getElementById('api-ips-error');
+        errorEl.classList.add('hidden');
+
+        if (!input.value.trim()) {
+            errorEl.textContent = 'Enter an IP address first.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        setButtonLoading(btn, true);
+        const { success, message } = await apiFetch('/api/admin/users/add-api-ip.php', {
+            method: 'POST',
+            body: { user_id: apiIpsTargetId, ip_address: input.value.trim() },
+        });
+        setButtonLoading(btn, false);
+
+        if (!success) {
+            errorEl.textContent = message || 'Unable to add that IP.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        input.value = '';
+        showToast('IP whitelisted.', 'success');
+        loadApiIps();
+    });
 
     form.addEventListener('input', (event) => {
         if (event.target.id === 'f-search') {

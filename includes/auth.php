@@ -145,9 +145,91 @@ function verify_csrf(): void
     }
 }
 
-/** Call at the top of every API endpoint. Combines auth + CSRF + optional role check. */
+/**
+ * Verifies a customer's own API bearer token (Settings → API access) and
+ * returns the user it belongs to — never returns on failure. Bearer auth
+ * is a distinct trust path from the browser session: no CSRF check
+ * (a stolen bearer token isn't a CSRF vector — nothing makes a browser
+ * attach it automatically the way it does a cookie), but layered with two
+ * checks the session path doesn't need: the token must exactly match what's
+ * currently stored (so regenerating a token immediately invalidates the
+ * old one, even though the old JWT itself wouldn't otherwise expire for
+ * up to a year), and the caller's IP must be on that customer's
+ * admin-managed whitelist — deliberately fails closed if none is
+ * configured yet, see customer_whitelisted_ips in schema.sql for why
+ * that whitelist is admin-owned rather than customer self-service.
+ */
+function authenticate_via_bearer_token(string $token): array
+{
+    $payload = jwt_decode_verify($token, PLATFORM_JWT_SECRET);
+    if ($payload === null || empty($payload['sub']) || !ctype_digit((string) $payload['sub'])) {
+        json_response(false, null, 'Invalid or expired API token.', 401);
+    }
+    $userId = (int) $payload['sub'];
+
+    $credStmt = db()->prepare('SELECT bearer_token FROM customer_api_credentials WHERE user_id = ?');
+    $credStmt->execute([$userId]);
+    $stored = $credStmt->fetchColumn();
+
+    if (!$stored || !hash_equals($stored, $token)) {
+        // Either no credentials were ever provisioned for this user, or
+        // this token was superseded by a later regeneration.
+        json_response(false, null, 'This API token has been revoked. Generate a new one.', 401);
+    }
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ipStmt = db()->prepare('SELECT 1 FROM customer_whitelisted_ips WHERE user_id = ? AND ip_address = ?');
+    $ipStmt->execute([$userId, $ip]);
+    if (!$ipStmt->fetchColumn()) {
+        write_audit_log($userId, 'api_request_blocked_ip', 'user', $userId, ['ip' => $ip]);
+        json_response(false, null, 'This request\'s IP address is not whitelisted for this account. Contact support to have it added.', 403);
+    }
+
+    $userStmt = db()->prepare('SELECT id, name, email, role, status, avatar_initials, gender, created_at FROM users WHERE id = ?');
+    $userStmt->execute([$userId]);
+    $user = $userStmt->fetch();
+
+    if (!$user) {
+        json_response(false, null, 'Invalid or expired API token.', 401);
+    }
+    if ($user['status'] !== 'active') {
+        json_response(false, null, 'This account has been suspended.', 403);
+    }
+
+    return $user;
+}
+
+/** Extracts a Bearer token from the Authorization header, checking every key PHP/Apache might expose it under. */
+function bearer_token_from_request(): ?string
+{
+    $header = $_SERVER['HTTP_AUTHORIZATION']
+        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+        ?? (function_exists('getallheaders') ? (getallheaders()['Authorization'] ?? null) : null);
+
+    if (!$header || !str_starts_with($header, 'Bearer ')) {
+        return null;
+    }
+    return trim(substr($header, 7));
+}
+
+/**
+ * Call at the top of every API endpoint. Combines auth + CSRF + optional
+ * role check for the normal browser-session path. Also accepts a
+ * customer's own API bearer token as an alternate identity — same role
+ * checks apply either way, so an admin-only endpoint stays admin-only
+ * regardless of which path authenticated the caller.
+ */
 function api_guard(array $roles = []): array
 {
+    $token = bearer_token_from_request();
+    if ($token !== null) {
+        $user = authenticate_via_bearer_token($token);
+        if (!empty($roles)) {
+            require_role($user, ...$roles);
+        }
+        return $user;
+    }
+
     $user = require_auth();
     verify_csrf();
     if (!empty($roles)) {

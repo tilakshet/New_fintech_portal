@@ -158,11 +158,18 @@ if [ "$ready" != true ]; then
     exit 1
 fi
 
-# 6. Seed demo data
+# 6. Apply any pending database migrations. Safe on every run: a fresh
+# volume's schema.sql already has everything, so this is a no-op; a stale
+# volume from an older checkout (the case that used to fail with "Table
+# ... doesn't exist") gets patched up automatically.
+echo "Checking database schema..."
+docker compose exec -T app php database/migrate.php
+
+# 7. Seed demo data
 echo "Seeding demo data..."
 docker compose exec -T app php database/seed.php
 
-# 7. Open the app
+# 8. Open the app
 url="http://localhost:8080/login"
 echo
 echo "Verapay is up: $url"

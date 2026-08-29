@@ -36,39 +36,6 @@
 
     const tbody = document.getElementById('gateways-tbody');
 
-    const accessTokenTab = document.getElementById('tab-access-token');
-    const paymentGatewayTab = document.getElementById('tab-payment-gateway');
-
-    const accessTokenPanel = document.getElementById('access-token-panel');
-    const paymentGatewayPanel = document.getElementById('payment-gateway-panel');
-
-    function setTab(activeTab) {
-        const showingAccessToken = activeTab === 'access-token';
-
-        accessTokenPanel.classList.toggle('hidden', !showingAccessToken);
-        paymentGatewayPanel.classList.toggle('hidden', showingAccessToken);
-
-        accessTokenTab.setAttribute(
-            'aria-selected',
-            String(showingAccessToken)
-        );
-
-        paymentGatewayTab.setAttribute(
-            'aria-selected',
-            String(!showingAccessToken)
-        );
-    }
-
-    accessTokenTab?.addEventListener('click', () => {
-        setTab('access-token');
-    });
-
-    paymentGatewayTab?.addEventListener('click', () => {
-        setTab('payment-gateway');
-    });
-
-    setTab('access-token');
-
     let pendingDeleteId = null;
     let pendingResetId = null;
 

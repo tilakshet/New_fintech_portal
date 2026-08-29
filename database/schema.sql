@@ -252,6 +252,46 @@ CREATE TABLE platform_api_settings (
     CONSTRAINT chk_platform_api_settings_singleton CHECK (id = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Per-customer API credentials for calling Verapay's own API programmatically
+-- (deposits/withdrawals/wallet/etc. on that customer's own behalf), distinct
+-- from platform_api_settings above (a single platform-wide credential set,
+-- superseded by this — kept in place rather than dropped, but no longer
+-- surfaced in the admin UI). One row per user: client_key/secret/bearer
+-- token are self-service (customer-owned), matching how Stripe/Razorpay
+-- issue one key pair per merchant rather than one shared platform key.
+CREATE TABLE customer_api_credentials (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    client_key VARCHAR(40) NOT NULL,
+    secret_key_hash VARCHAR(255) NOT NULL,
+    secret_key_last4 VARCHAR(4) NOT NULL,
+    bearer_token TEXT NULL,
+    bearer_token_generated_at DATETIME NULL,
+    payout_callback_url VARCHAR(255) NULL,
+    payin_callback_url VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_customer_api_credentials_user (user_id),
+    UNIQUE KEY uq_customer_api_credentials_client_key (client_key),
+    CONSTRAINT fk_customer_api_credentials_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Deliberately admin-managed, not customer self-service: if a customer's
+-- own Verapay login were compromised, letting them also edit their own IP
+-- whitelist would let an attacker open API access from a new location
+-- with nothing else required. Requiring an admin action here means account
+-- takeover alone can't silently expand where a stolen bearer token works.
+CREATE TABLE customer_whitelisted_ips (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    added_by INT UNSIGNED NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_customer_whitelisted_ips (user_id, ip_address),
+    CONSTRAINT fk_customer_whitelisted_ips_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_customer_whitelisted_ips_admin FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE platform_whitelisted_ips (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(45) NOT NULL,

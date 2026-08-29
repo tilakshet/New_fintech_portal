@@ -105,6 +105,11 @@ if (!column_exists($pdo, 'payment_gateways', 'sandbox_mode')) {
     $applied[] = 'migration5.sql (payment_gateways.sandbox_mode)';
 }
 
+if (!table_exists($pdo, 'customer_api_credentials')) {
+    run_sql_file($pdo, __DIR__ . '/migration6.sql');
+    $applied[] = 'migration6.sql (customer_api_credentials, customer_whitelisted_ips)';
+}
+
 if (empty($applied)) {
     echo "Database already up to date — nothing to migrate.\n";
 } else {

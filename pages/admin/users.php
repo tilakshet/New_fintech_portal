@@ -210,3 +210,80 @@ render_modal(
 );
 
 ?>
+
+<!-- API Access (IP whitelist) Modal -->
+<dialog id="api-ips-modal"
+        class="rounded-md p-0 backdrop:bg-black/40 w-full max-w-lg"
+        aria-labelledby="api-ips-title">
+
+    <div class="flex flex-col">
+        <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-border">
+            <div>
+                <h2 id="api-ips-title" class="text-3xl font-semibold text-text-primary">API access</h2>
+                <p id="api-ips-target" class="text-sm text-text-secondary mt-0.5"></p>
+            </div>
+            <button type="button" class="btn-icon shrink-0" data-modal-close aria-label="Close dialog">
+                <?= icon('close', 'w-5 h-5') ?>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            <div id="api-ips-no-creds" class="hidden text-center py-6">
+                <span class="icon-chip-md icon-chip-neutral mx-auto mb-3"><?= icon('key', 'w-4 h-4') ?></span>
+                <p class="text-md text-text-primary font-medium mb-1">No API credentials yet</p>
+                <p class="text-sm text-text-secondary">This customer hasn't generated their own client key from Settings — there's nothing to whitelist until they do.</p>
+            </div>
+
+            <div id="api-ips-body">
+
+                <!-- Credentials status -->
+                <div class="rounded-md border border-border overflow-hidden mb-5">
+                    <div class="flex items-center gap-2.5 px-4 py-3 bg-surface-muted border-b border-border">
+                        <span class="icon-chip-sm icon-chip-brand"><?= icon('key', 'w-3.5 h-3.5') ?></span>
+                        <h3 class="text-md font-semibold text-text-primary">Credentials</h3>
+                    </div>
+
+                    <dl class="divide-y divide-border">
+                        <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+                            <dt class="text-sm text-text-secondary shrink-0">Client key</dt>
+                            <dd id="api-ips-client-key" class="font-mono text-sm text-text-primary text-right truncate"></dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+                            <dt class="text-sm text-text-secondary shrink-0">Bearer token</dt>
+                            <dd id="api-ips-token-status" class="text-right"></dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+                            <dt class="text-sm text-text-secondary shrink-0">Pay-in callback</dt>
+                            <dd id="api-ips-payin-url" class="text-sm text-text-primary text-right truncate max-w-[60%]"></dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+                            <dt class="text-sm text-text-secondary shrink-0">Payout callback</dt>
+                            <dd id="api-ips-payout-url" class="text-sm text-text-primary text-right truncate max-w-[60%]"></dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Whitelisted IPs -->
+                <div>
+                    <div class="flex items-center gap-2.5 mb-1">
+                        <span class="icon-chip-sm icon-chip-brand"><?= icon('shield', 'w-3.5 h-3.5') ?></span>
+                        <h3 class="text-md font-semibold text-text-primary">Whitelisted IPs</h3>
+                    </div>
+                    <p class="field-help mb-3">Only requests from these addresses can use this customer's API token.</p>
+
+                    <ul id="api-ips-list" class="space-y-2 mb-4"></ul>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="api-ips-new" class="field-input flex-1" placeholder="e.g. 13.203.91.156">
+                        <button type="button" id="api-ips-add" class="btn-secondary shrink-0"><?= icon('plus', 'w-4 h-4') ?> Add IP</button>
+                    </div>
+                    <p id="api-ips-error" class="field-error hidden mt-2"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-surface-muted rounded-b-md">
+            <button type="button" class="btn-secondary" data-modal-close>Close</button>
+        </div>
+    </div>
+</dialog>

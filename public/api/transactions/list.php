@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/functions.php';
 
-$user = require_auth();
+$user = api_guard();
 $isOperator = in_array($user['role'], ['admin', 'operator'], true);
 $pdo = db();
 

@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/../../../../config/database.php';
-require_once __DIR__ . '/../../../../includes/auth.php';
-require_once __DIR__ . '/../../../../includes/functions.php';
+require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../../includes/auth.php';
+require_once __DIR__ . '/../../../includes/functions.php';
 
-$user = api_guard(['admin']);
+$user = api_guard(['customer']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(false, null, 'Method not allowed.', 405);
@@ -28,15 +28,18 @@ $validateUrl($payinUrl, 'the pay-in callback URL');
 
 $pdo = db();
 $stmt = $pdo->prepare(
-    'UPDATE platform_api_settings SET payout_callback_url = ?, payin_callback_url = ? WHERE id = 1'
+    'UPDATE customer_api_credentials SET payout_callback_url = ?, payin_callback_url = ? WHERE user_id = ?'
 );
-$stmt->execute([$payoutUrl ?: null, $payinUrl ?: null]);
+$stmt->execute([$payoutUrl ?: null, $payinUrl ?: null, $user['id']]);
 
-$exists = $pdo->query('SELECT 1 FROM platform_api_settings WHERE id = 1')->fetchColumn();
-if (!$exists) {
-    json_response(false, null, 'API credentials have not been provisioned yet. Reload the page and try again.', 409);
+if ($stmt->rowCount() === 0) {
+    $exists = $pdo->prepare('SELECT 1 FROM customer_api_credentials WHERE user_id = ?');
+    $exists->execute([$user['id']]);
+    if (!$exists->fetchColumn()) {
+        json_response(false, null, 'API credentials have not been provisioned yet. Reload the page and try again.', 409);
+    }
 }
 
-write_audit_log((int) $user['id'], 'platform_webhook_config_updated', 'platform_api_settings', 1, []);
+write_audit_log((int) $user['id'], 'api_webhook_config_updated', 'user', (int) $user['id'], []);
 
 json_response(true, null, 'Webhook configuration saved.');

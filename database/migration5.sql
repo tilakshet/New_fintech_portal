@@ -1,8 +1,7 @@
--- Automatic gateway health tracking (circuit breaker). A gateway that
--- fails several times in a row is temporarily excluded from selection
--- without any admin action — it self-heals after the cooldown, but every
--- trip and recovery is audited so it stays explainable, not silent magic.
+-- Cashfree integration: sandbox/production toggle, generic to any provider
+-- that splits its API across separate sandbox and live base URLs (Cashfree
+-- does, Razorpay doesn't need this - same endpoint for test and live keys).
+-- Apply to any database that predates this migration.
 
 ALTER TABLE payment_gateways
-    ADD COLUMN consecutive_failures INT UNSIGNED NOT NULL DEFAULT 0 AFTER daily_limit_amount,
-    ADD COLUMN auto_paused_until DATETIME NULL AFTER consecutive_failures;
+    ADD COLUMN sandbox_mode TINYINT(1) NOT NULL DEFAULT 1 AFTER public_key;

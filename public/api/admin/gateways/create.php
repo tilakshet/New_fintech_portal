@@ -11,12 +11,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $allowedProviders = ['razorpay', 'payu', 'cashfree', 'stripe', 'paypal', 'other'];
+// Providers whose live integration needs a public-safe identifier
+// alongside the secret (Razorpay's Key ID, Cashfree's Client ID).
+$providersNeedingPublicKey = ['razorpay' => 'Key ID', 'cashfree' => 'Client ID'];
 
 $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $name = trim((string) ($input['display_name'] ?? ''));
 $provider = $input['provider'] ?? '';
 $apiKey = trim((string) ($input['api_key'] ?? ''));
 $publicKey = trim((string) ($input['public_key'] ?? ''));
+$sandboxMode = !array_key_exists('sandbox_mode', $input) || (bool) $input['sandbox_mode'];
 
 if ($name === '' || mb_strlen($name) > 80) {
     json_response(false, null, 'Enter a name for this gateway (up to 80 characters).', 422);
@@ -27,11 +31,12 @@ if (!in_array($provider, $allowedProviders, true)) {
 if (mb_strlen($apiKey) < 8) {
     json_response(false, null, 'Enter an API key of at least 8 characters.', 422);
 }
-if ($provider === 'razorpay' && $publicKey === '') {
-    json_response(false, null, 'Razorpay also needs its Key ID (the public identifier from the same API Keys screen as the secret).', 422);
+if (isset($providersNeedingPublicKey[$provider]) && $publicKey === '') {
+    $label = $providersNeedingPublicKey[$provider];
+    json_response(false, null, "This provider also needs its {$label} (the public identifier from the same API Keys screen as the secret).", 422);
 }
 if (mb_strlen($publicKey) > 190) {
-    json_response(false, null, 'Key ID is too long.', 422);
+    json_response(false, null, 'The public identifier is too long.', 422);
 }
 
 $pdo = db();
@@ -46,10 +51,10 @@ try {
 }
 
 $stmt = $pdo->prepare(
-    'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, api_key_encrypted, public_key, status, is_default)
-     VALUES (?, ?, ?, ?, ?, ?, "inactive", 0)'
+    'INSERT INTO payment_gateways (display_name, provider, api_key_last4, api_key_hash, api_key_encrypted, public_key, sandbox_mode, status, is_default)
+     VALUES (?, ?, ?, ?, ?, ?, ?, "inactive", 0)'
 );
-$stmt->execute([$name, $provider, $last4, $hash, $encrypted, $publicKey ?: null]);
+$stmt->execute([$name, $provider, $last4, $hash, $encrypted, $publicKey ?: null, $sandboxMode ? 1 : 0]);
 $id = (int) $pdo->lastInsertId();
 
 write_audit_log((int) $actor['id'], 'gateway_created', 'payment_gateway', $id, ['provider' => $provider, 'display_name' => $name]);

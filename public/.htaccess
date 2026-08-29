@@ -1,5 +1,13 @@
 RewriteEngine On
 
+# Apache/mod_php strips the Authorization header by default unless told
+# otherwise - without this, bearer-token API auth (includes/auth.php)
+# silently sees no header at all and falls through to session auth,
+# which is confusing to debug. PHP's built-in dev server and PHP-FPM
+# behind Nginx don't need this - they pass it through natively.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 # Serve real files/directories (assets, api/*.php) as-is.
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

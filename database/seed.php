@@ -15,7 +15,7 @@ $pdo = db();
 // TRUNCATE is DDL and implicitly commits any open transaction in MySQL,
 // so this cleanup runs outside the transaction used for the inserts below.
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'gateway_daily_usage', 'webhook_events', 'transactions', 'wallets', 'business_profiles', 'login_attempts', 'payment_gateways', 'users'] as $table) {
+foreach (['audit_logs', 'notifications', 'support_messages', 'support_conversations', 'gateway_daily_usage', 'webhook_events', 'transactions', 'wallets', 'business_profiles', 'customer_whitelisted_ips', 'customer_api_credentials', 'login_attempts', 'payment_gateways', 'users'] as $table) {
     $pdo->exec("TRUNCATE TABLE {$table}");
 }
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');

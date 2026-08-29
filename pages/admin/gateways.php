@@ -4,8 +4,7 @@ require_once __DIR__ . '/../../includes/modal.php';
 require_once __DIR__ . '/../../includes/banner.php';
 
 $extraScripts = [
-    '/assets/js/pages/admin-gateways.js',
-    '/assets/js/pages/admin-api-settings.js'
+    '/assets/js/pages/admin-gateways.js'
 ];
 
 render_hero_banner(
@@ -15,192 +14,8 @@ render_hero_banner(
 );
 ?>
 
-<div class="mt-8">
-    <div id="payment-gateway-tabs"
-         class="tab-list"
-         role="tablist"
-         aria-label="Payment gateway settings">
-
-        <button type="button"
-                id="tab-access-token"
-                class="tab-btn"
-                role="tab"
-                aria-selected="true"
-                aria-controls="access-token-panel">
-            <?= icon('key', 'w-4 h-4') ?> Access Token Credentials
-        </button>
-
-        <button type="button"
-                id="tab-payment-gateway"
-                class="tab-btn"
-                role="tab"
-                aria-selected="false"
-                aria-controls="payment-gateway-panel">
-            <?= icon('plus', 'w-4 h-4') ?> Add Payment Gateway
-        </button>
-    </div>
-</div>
-
-<!-- Access Token Credentials -->
-<div id="access-token-panel"
-     role="tabpanel"
-     aria-labelledby="tab-access-token">
-
-    <div id="api-settings-loading" class="card text-center py-12 mt-5">
-        <p class="text-md text-text-secondary">Loading API settings…</p>
-    </div>
-
-    <div id="api-settings-content" class="hidden space-y-5 mt-5">
-
-        <!-- API Credentials -->
-        <div class="card">
-            <div class="flex items-center gap-2.5 mb-5">
-                <span class="icon-chip-md icon-chip-brand">
-                    <?= icon('key', 'w-5 h-5') ?>
-                </span>
-                <h2 class="card-title">API credentials</h2>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                <div>
-                    <label class="field-label">Client key</label>
-                    <input type="text"
-                           id="as-client-key"
-                           class="field-input font-mono"
-                           readonly>
-                </div>
-
-                <div>
-                    <label class="field-label">Secret key</label>
-                    <input type="text"
-                           id="as-secret-key"
-                           class="field-input font-mono"
-                           readonly>
-                </div>
-            </div>
-
-            <label class="field-label">Active bearer token</label>
-
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text"
-                       id="as-bearer-token"
-                       class="field-input font-mono flex-1"
-                       readonly
-                       placeholder="No token generated yet">
-
-                <button type="button"
-                        id="as-generate-token"
-                        class="btn-secondary shrink-0">
-                    <?= icon('key', 'w-4 h-4') ?> Generate bearer token
-                </button>
-            </div>
-
-            <p id="as-token-meta" class="field-help"></p>
-            <p id="as-token-error" class="field-error hidden"></p>
-        </div>
-
-        <!-- IP Whitelisting -->
-        <div class="card">
-            <div class="flex items-center gap-2.5 mb-5">
-                <span class="icon-chip-md icon-chip-brand">
-                    <?= icon('shield', 'w-5 h-5') ?>
-                </span>
-                <h2 class="card-title">IP whitelisting</h2>
-            </div>
-
-            <div class="mb-5">
-                <label for="as-primary-ip" class="field-label">
-                    Primary whitelist IP
-                </label>
-
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text"
-                           id="as-primary-ip"
-                           class="field-input flex-1"
-                           placeholder="e.g. 13.203.91.156">
-
-                    <button type="button"
-                            id="as-save-primary-ip"
-                            class="btn-secondary shrink-0">
-                        Update IP
-                    </button>
-                </div>
-
-                <p id="as-primary-ip-error" class="field-error hidden"></p>
-            </div>
-
-            <div>
-                <label class="field-label">Secondary IPs</label>
-
-                <ul id="as-secondary-ips" class="space-y-2 mb-3"></ul>
-
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text"
-                           id="as-new-secondary-ip"
-                           class="field-input flex-1"
-                           placeholder="Add another IP address">
-
-                    <button type="button"
-                            id="as-add-secondary-ip"
-                            class="btn-secondary shrink-0">
-                        <?= icon('plus', 'w-4 h-4') ?> Add IP
-                    </button>
-                </div>
-
-                <p id="as-secondary-ip-error" class="field-error hidden"></p>
-            </div>
-        </div>
-
-        <!-- Webhook Callbacks -->
-        <div class="card">
-            <div class="flex items-center gap-2.5 mb-5">
-                <span class="icon-chip-md icon-chip-brand">
-                    <?= icon('send', 'w-5 h-5') ?>
-                </span>
-                <h2 class="card-title">Webhook callbacks</h2>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                <div>
-                    <label for="as-payout-url" class="field-label">
-                        Payout callback URL
-                    </label>
-
-                    <input type="url"
-                           id="as-payout-url"
-                           class="field-input"
-                           placeholder="https://…">
-                </div>
-
-                <div>
-                    <label for="as-payin-url" class="field-label">
-                        Pay-in callback URL
-                    </label>
-
-                    <input type="url"
-                           id="as-payin-url"
-                           class="field-input"
-                           placeholder="https://…">
-                </div>
-            </div>
-
-            <p id="as-webhook-error" class="field-error hidden mb-4"></p>
-
-            <button type="button"
-                    id="as-save-webhooks"
-                    class="btn-primary">
-                <?= icon('upload', 'w-4 h-4') ?> Save webhook configurations
-            </button>
-        </div>
-
-    </div>
-</div>
-
 <!-- Payment Gateway -->
-<div id="payment-gateway-panel"
-     class="hidden"
-     role="tabpanel"
-     aria-labelledby="tab-payment-gateway">
+<div id="payment-gateway-panel">
 
     <div class="flex justify-end mt-5 mb-6">
         <button type="button"
@@ -299,7 +114,7 @@ render_hero_banner(
 
             <div id="ag-public-key-field" class="hidden">
                 <label for="ag-public-key" class="field-label">
-                    Key ID
+                    <span id="ag-public-key-label">Key ID</span>
                     <span class="text-danger" aria-hidden="true">*</span>
                 </label>
 
@@ -311,7 +126,17 @@ render_hero_banner(
                        spellcheck="false">
 
                 <p class="field-help">
-                    Razorpay's public Key ID, from the same API Keys screen as the secret below. Not sensitive — safe to display in full.
+                    The public identifier from the same API keys screen as the secret below (Razorpay: Key ID · Cashfree: Client ID). Not sensitive — safe to display in full.
+                </p>
+            </div>
+
+            <div id="ag-sandbox-field" class="hidden">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="ag-sandbox-mode" class="rounded" checked>
+                    <span class="text-md text-text-primary">Sandbox / test mode</span>
+                </label>
+                <p class="field-help">
+                    Uncheck only once you have real live-mode credentials — some providers (Cashfree) use a completely separate API endpoint for production.
                 </p>
             </div>
 
@@ -381,7 +206,7 @@ render_hero_banner(
                class="text-md text-text-secondary"></p>
 
             <div id="rk-public-key-field" class="hidden">
-                <label for="rk-public-key" class="field-label">New Key ID</label>
+                <label for="rk-public-key" class="field-label"><span id="rk-public-key-label">New Key ID</span></label>
 
                 <input type="text"
                        id="rk-public-key"
@@ -391,7 +216,17 @@ render_hero_banner(
                        spellcheck="false">
 
                 <p class="field-help">
-                    Razorpay issues Key ID and secret as a pair — update both together when regenerating. Leave blank to keep the current Key ID.
+                    This provider issues its public identifier and secret as a pair — update both together when regenerating. Leave blank to keep the current one.
+                </p>
+            </div>
+
+            <div id="rk-sandbox-field" class="hidden">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="rk-sandbox-mode" class="rounded">
+                    <span class="text-md text-text-primary">Sandbox / test mode</span>
+                </label>
+                <p class="field-help">
+                    Only change this if you're switching this gateway between test and live credentials.
                 </p>
             </div>
 

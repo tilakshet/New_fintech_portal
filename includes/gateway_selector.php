@@ -14,6 +14,15 @@
 
 require_once __DIR__ . '/money.php';
 
+// Circuit breaker: this many consecutive definite failures on a gateway
+// (see record_gateway_outcome()) auto-excludes it from selection for the
+// cooldown period below, without any admin action. Deliberately a fixed,
+// explainable rule rather than anything adaptive — the trip and every
+// recovery is written to audit_logs so it's never a silent behavior
+// change an operator has to go digging for.
+const GATEWAY_AUTO_PAUSE_FAILURE_THRESHOLD = 3;
+const GATEWAY_AUTO_PAUSE_MINUTES = 15;
+
 /**
  * Picks the highest-priority active gateway with enough remaining daily
  * capacity for $amount, and atomically reserves that capacity against it.
@@ -35,6 +44,7 @@ function select_and_reserve_gateway(PDO $pdo, string $amount): array
         'SELECT id, display_name, provider, priority, daily_limit_amount, public_key, api_key_encrypted
          FROM payment_gateways
          WHERE status = "active"
+           AND (auto_paused_until IS NULL OR auto_paused_until <= UTC_TIMESTAMP())
          ORDER BY priority ASC, id ASC'
     );
     $gatewaysStmt->execute();
@@ -99,6 +109,45 @@ function release_gateway_reservation(PDO $pdo, int $gatewayId, string $amount): 
          SET used_amount = GREATEST(used_amount - ?, 0.00), transaction_count = GREATEST(transaction_count - 1, 0)
          WHERE gateway_id = ? AND usage_date = ?'
     )->execute([$amount, $gatewayId, gmdate('Y-m-d')]);
+}
+
+/**
+ * Records a definite (never ambiguous) transaction outcome against the
+ * gateway that handled it, and trips or clears the circuit breaker.
+ *
+ * Called from exactly one place, apply_transaction_outcome() in
+ * gateway_webhooks.php — which itself is only ever reached for a
+ * confirmed webhook result or a synchronous, definite provider rejection
+ * (see RazorpayAmbiguousException handling in deposits/create.php). An
+ * unknown/timeout outcome never reaches here, so it can never contribute
+ * to a pause — exactly the FR-010 distinction this whole system is built
+ * around.
+ */
+function record_gateway_outcome(PDO $pdo, int $gatewayId, bool $success): void
+{
+    if ($success) {
+        $pdo->prepare('UPDATE payment_gateways SET consecutive_failures = 0, auto_paused_until = NULL WHERE id = ?')
+            ->execute([$gatewayId]);
+        return;
+    }
+
+    $pdo->prepare('UPDATE payment_gateways SET consecutive_failures = consecutive_failures + 1 WHERE id = ?')
+        ->execute([$gatewayId]);
+
+    $countStmt = $pdo->prepare('SELECT consecutive_failures FROM payment_gateways WHERE id = ?');
+    $countStmt->execute([$gatewayId]);
+    $failures = (int) $countStmt->fetchColumn();
+
+    if ($failures >= GATEWAY_AUTO_PAUSE_FAILURE_THRESHOLD) {
+        $pdo->prepare(
+            'UPDATE payment_gateways SET auto_paused_until = DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? MINUTE) WHERE id = ?'
+        )->execute([GATEWAY_AUTO_PAUSE_MINUTES, $gatewayId]);
+
+        write_audit_log(null, 'gateway_auto_paused', 'payment_gateway', $gatewayId, [
+            'consecutive_failures' => $failures,
+            'pause_minutes' => GATEWAY_AUTO_PAUSE_MINUTES,
+        ]);
+    }
 }
 
 /**
